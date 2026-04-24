@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS AI — Command Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* ========================================
+           CSS VARIABLES — DARK & LIGHT THEMES
+           ======================================== */
+        :root {
+            --primary: #7B3FF2;
+            --primary-rgb: 123, 63, 242;
+            --secondary: #00E0FF;
+            --secondary-rgb: 0, 224, 255;
+            --accent: #FF7A18;
+            --accent-rgb: 255, 122, 24;
+            --bg: #0A0F1C;
+            --bg-alt: #0E1425;
+            --surface: rgba(255,255,255,0.05);
+            --surface-hover: rgba(255,255,255,0.09);
+            --border: rgba(123,63,242,0.25);
+            --border-glow: rgba(123,63,242,0.5);
+            --text: #EAF0FF;
+            --text-secondary: #9FB3FF;
+            --text-muted: #4A5680;
+            --sidebar-bg: rgba(10,15,28,0.92);
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+            --shadow-neon: 0 0 20px rgba(123,63,242,0.3);
+            --font: 'Poppins', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --sidebar-w: 260px;
+            --sidebar-collapsed: 72px;
+            --topbar-h: 64px;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg: #F0F2F8;
+            --bg-alt: #E4E7F0;
+            --surface: rgba(255,255,255,0.75);
+            --surface-hover: rgba(255,255,255,0.9);
+            --border: rgba(123,63,242,0.18);
+            --border-glow: rgba(123,63,242,0.35);
+            --text: #1A1E2E;
+            --text-secondary: #5A6080;
+            --text-muted: #9BA0B8;
+            --sidebar-bg: rgba(255,255,255,0.88);
+            --shadow: 0 8px 32px rgba(0,0,0,0.08);
+            --shadow-neon: 0 0 20px rgba(123,63,242,0.12);
+        }
+
+        /* ========================================
+           RESET & BASE
+           ======================================== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; border: none; background: none; font-family: inherit; color: inherit; }
+        img { max-width: 100%; display: block; }
+
+        /* ========================================
+           LOADING SCREEN
+           ======================================== */
+        #loader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: #050810;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loader-logo-wrap {
+            position: relative; margin-bottom: 32px;
+        }
+        .loader-logo-wrap img {
+            height: 64px; width: auto; position: relative; z-index: 2;
+            filter: drop-shadow(0 0 20px rgba(123,63,242,0.6));
+        }
+        .loader-logo-wrap::before {
+            content: ''; position: absolute; inset: -20px;
+            background: radial-gradient(circle, rgba(123,63,242,0.25) 0%, transparent 70%);
+            animation: loaderPulse 1.5s ease-in-out infinite;
+            border-radius: 50%;
+        }
+        @keyframes loaderPulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .loader-bar-track {
+            width: 240px; height: 3px; background: rgba(255,255,255,0.08);
+            border-radius: 2px; overflow: hidden;
+        }
+        .loader-bar-fill {
+            height: 100%; width: 0; border-radius: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.3s ease;
+        }
+        .loader-text {
+            margin-top: 16px; font-size: 12px; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        /* ========================================
+           BACKGROUND GRID & PARTICLES
+           ======================================== */
+        #bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(123,63,242,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(123,63,242,0.04) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 100%);
+        }
+        #bg-particles {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        }
+
+        /* ========================================
+           LAYOUT WRAPPER
+           ======================================== */
+        .app-wrapper {
+            display: flex; min-height: 100vh;
+            position: relative; z-index: 1;
+        }
+
+        /* ========================================
+           SIDEBAR
+           ======================================== */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-w); z-index: 100;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            transition: width var(--transition), transform var(--transition);
+            overflow: hidden;
+        }
+        .sidebar.collapsed { width: var(--sidebar-collapsed); }
+        .sidebar.collapsed .sidebar-label,
+        .sidebar.collapsed .sidebar-logo-text,
+        .sidebar.collapsed .sidebar-section-title { opacity: 0; width: 0; overflow: hidden; }
+        .sidebar.collapsed .sidebar-logo-text { margin: 0; }
+
+        .sidebar-logo {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-logo-img {
+            width: 36px; height: 36px; flex-shrink: 0;
+            position: relative;
+        }
+        .sidebar-logo-img img {
+            width: 100%; height: 100%; object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(123,63,242,0.5));
+            animation: logoShine 3s ease-in-out infinite;
+        }
+        @keyframes logoShine {
+            0%, 100% { filter: drop-shadow(0 0 12px rgba(123,63,242,0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(123,63,242,0.8)) drop-shadow(0 0 40px rgba(0,224,255,0.3)); }
+        }
+        .sidebar-logo-text {
+            font-size: 18px; font-weight: 700; letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; white-space: nowrap;
+            transition: opacity var(--transition), margin var(--transition);
+        }
+
+        .sidebar-nav {
+            flex: 1; overflow-y: auto; padding: 12px 8px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .sidebar-section-title {
+            font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--text-muted); padding: 16px 12px 8px;
+            white-space: nowrap; transition: opacity var(--transition);
+        }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); font-size: 14px; font-weight: 500;
+            transition: all var(--transition); position: relative;
+            white-space: nowrap; overflow: hidden;
+        }
+        .sidebar-item i { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+        .sidebar-item .sidebar-label { transition: opacity var(--transition); }
+        .sidebar-item:hover {
+            background: var(--surface-hover); color: var(--text);
+        }
+        .sidebar-item.active {
+            background: rgba(123,63,242,0.15);
+            color: var(--secondary);
+            box-shadow: inset 0 0 0 1px var(--border-glow);
+        }
+        .sidebar-item.active::before {
+            content: ''; position: absolute; left: 0; top: 50%;
+            transform: translateY(-50%); width: 3px; height: 24px;
+            background: var(--secondary); border-radius: 0 3px 3px 0;
+            box-shadow: 0 0 10px var(--secondary);
+        }
+        .sidebar-item .badge {
+            margin-left: auto; background: var(--accent);
+            color: #fff; font-size: 10px; font-weight: 700;
+            padding: 2px 7px; border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 12px; border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sidebar-collapse-btn {
+            width: 100%; display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 10px; border-radius: var(--radius-sm);
+            color: var(--text-muted); font-size: 13px;
+            transition: all var(--transition);
+        }
+        .sidebar-collapse-btn:hover { background: var(--surface-hover); color: var(--text); }
+        .sidebar-collapse-btn i { transition: transform var(--transition); }
+        .sidebar.collapsed .sidebar-collapse-btn i { transform: rotate(180deg); }
+
+        /* Sidebar overlay for mobile */
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0; z-index: 99;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.visible { display: block; }
+
+        /* ========================================
+           MAIN AREA
+           ======================================== */
+        .main-area {
+            flex: 1; margin-left: var(--sidebar-w);
+            transition: margin-left var(--transition);
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+        .main-area.sidebar-collapsed { margin-left: var(--sidebar-collapsed); }
+
+        /* ========================================
+           TOP NAVBAR
+           ======================================== */
+        .topbar {
+            height: var(--topbar-h); padding: 0 24px;
+            display: flex; align-items: center; gap: 16px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+            flex-shrink: 0;
+        }
+        .topbar-hamburger {
+            display: none; font-size: 20px; color: var(--text-secondary);
+            padding: 6px; transition: color var(--transition);
+        }
+        .topbar-hamburger:hover { color: var(--text); }
+
+        .topbar-search {
+            flex: 1; max-width: 420px; position: relative;
+        }
+        .topbar-search i {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 14px;
+        }
+        .topbar-search input {
+            width: 100%; padding: 9px 14px 9px 40px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text);
+            font-family: var(--font); font-size: 13px;
+            transition: all var(--transition); outline: none;
+        }
+        .topbar-search input::placeholder { color: var(--text-muted); }
+        .topbar-search input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(123,63,242,0.15);
+        }
+
+        .topbar-right {
+            display: flex; align-items: center; gap: 6px; margin-left: auto;
+        }
+        .topbar-btn {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-secondary); font-size: 16px;
+            transition: all var(--transition); position: relative;
+        }
+        .topbar-btn:hover { background: var(--surface-hover); color: var(--text); }
+        .topbar-btn .dot {
+            position: absolute; top: 7px; right: 8px;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent);
+            border: 2px solid var(--bg);
+        }
+
+        .topbar-clock {
+            font-family: var(--font-mono); font-size: 13px;
+            color: var(--text-secondary); padding: 6px 12px;
+            background: var(--surface); border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .topbar-clock span { color: var(--secondary); }
+
+        .topbar-profile {
+            display: flex; align-items: center; gap: 10px;
+            padding: 4px 10px 4px 4px; border-radius: var(--radius-sm);
+            transition: all var(--transition); position: relative;
+        }
+        .topbar-profile:hover { background: var(--surface-hover); }
+        .topbar-profile-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 13px; color: #fff;
+            box-shadow: 0 0 12px rgba(123,63,242,0.3);
+        }
+        .topbar-profile-info { line-height: 1.3; }
+        .topbar-profile-name { font-size: 13px; font-weight: 600; }
+        .topbar-profile-role { font-size: 10px; color: var(--text-muted); }
+
+        /* Profile dropdown */
+        .profile-dropdown {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            width: 200px; background: var(--sidebar-bg);
+            backdrop-filter: blur(24px); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 8px;
+            box-shadow: var(--shadow);
+            opacity: 0; visibility: hidden; transform: translateY(-8px);
+            transition: all var(--transition); z-index: 60;
+        }
+        .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .profile-dropdown-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; border-radius: var(--radius-sm);
+            font-size: 13px; color: var(--text-secondary);
+            transition: all var(--transition);
+        }
+        .profile-dropdown-item:hover { background: var(--surface-hover); color: var(--text); }
+        .profile-dropdown-item i { width: 16px; text-align: center; }
+        .profile-dropdown-divider {
+            height: 1px; background: var(--border); margin: 6px 0;
+        }
+
+        /* ========================================
+           MAIN CONTENT
+           ======================================== */
+        .main-content {
+            flex: 1; padding: 24px;
+            transition: opacity 0.3s ease;
+        }
+        .main-content.fade-out { opacity: 0; }
+        .main-content.fade-in { opacity: 1; }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-size: 26px; font-weight: 700; margin-bottom: 4px;
+        }
+        .page-subtitle {
+            font-size: 13px; color: var(--text-secondary);
+        }
+
+        /* ========================================
+           GLASS CARD
+           ======================================== */
+        .glass-card {
+            background: var(--surface);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: all var(--transition);
+            position: relative;
+        }
+        .glass-card:hover {
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-neon);
+        }
+        .glass-card.floating {
+            animation: cardFloat 6s ease-in-out infinite;
+        }
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .glass-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .glass-card-title {
+            font-size: 14px; font-weight: 600;
+        }
+
+        /* ========================================
+           STAT CARDS
+           ======================================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            display: flex; align-items: flex-start; gap: 14px;
+        }
+        .stat-icon {
+            width: 46px; height: 46px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .stat-icon.purple { background: rgba(123,63,242,0.15); color: var(--primary); }
+        .stat-icon.blue { background: rgba(0,224,255,0.12); color: var(--secondary); }
+        .stat-icon.orange { background: rgba(255,122,24,0.12); color: var(--accent); }
+        .stat-icon.green { background: rgba(16,185,129,0.12); color: #10B981; }
+        .stat-info { flex: 1; }
+        .stat-value {
+            font-size: 24px; font-weight: 700; line-height: 1.2;
+            font-family: var(--font-mono);
+        }
+        .stat-label {
+            font-size: 12px; color: var(--text-muted); margin-top: 2px;
+        }
+        .stat-change {
+            font-size: 11px; font-weight: 600; margin-top: 4px;
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .stat-change.up { color: #10B981; background: rgba(16,185,129,0.1); }
+        .stat-change.down { color: #EF4444; background: rgba(239,68,68,0.1); }
+
+        /* ========================================
+           CHARTS GRID
+           ======================================== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px; margin-bottom: 24px;
+        }
+        .chart-container {
+            position: relative; width: 100%;
+        }
+        .chart-container canvas { width: 100% !important; }
+
+        /* ========================================
+           BOTTOM GRID
+           ======================================== */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px; margin-bottom: 24px;
+        }
+
+        /* ========================================
+           TABLE
+           ======================================== */
+        .data-table {
+            width: 100%; border-collapse: collapse;
+        }
+        .data-table thead th {
+            text-align: left; padding: 10px 14px;
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-muted); border-bottom: 1px solid var(--border);
+        }
+        .data-table tbody tr {
+            transition: background var(--transition);
+        }
+        .data-table tbody tr:hover { background: var(--surface-hover); }
+        .data-table tbody td {
+            padding: 12px 14px; font-size: 13px;
+            border-bottom: 1px solid rgba(123,63,242,0.08);
+            color: var(--text-secondary);
+        }
+        .data-table .name-cell {
+            color: var(--text); font-weight: 500;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 600;
+        }
+        .status-badge::before {
+            content: ''; width: 6px; height: 6px; border-radius: 50%;
+        }
+        .status-badge.active { background: rgba(16,185,129,0.12); color: #10B981; }
+        .status-badge.active::before { background: #10B981; box-shadow: 0 0 6px #10B981; }
+        .status-badge.pending { background: rgba(255,122,24,0.12); color: var(--accent); }
+        .status-badge.pending::before { background: var(--accent); }
+        .status-badge.offline { background: rgba(239,68,68,0.12); color: #EF4444; }
+        .status-badge.offline::before { background: #EF4444; }
+
+        /* ========================================
+           PROGRESS BARS
+           ======================================== */
+        .progress-item {
+            margin-bottom: 14px;
+        }
+        .progress-item:last-child { margin-bottom: 0; }
+        .progress-header {
+            display: flex; justify-content: space-between;
+            margin-bottom: 6px; font-size: 12px;
+        }
+        .progress-label { color: var(--text-secondary); }
+        .progress-value { color: var(--text); font-weight: 600; font-family: var(--font-mono); }
+        .progress-track {
+            height: 6px; background: rgba(255,255,255,0.06);
+            border-radius: 3px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 1s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progressShine 2s ease-in-out infinite;
+        }
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .progress-fill.orange {
+            background: linear-gradient(90deg, var(--accent), #FFB347);
+        }
+        .progress-fill.green {
+            background: linear-gradient(90deg, #10B981, #6EE7B7);
+        }
+        .progress-fill.blue {
+            background: linear-gradient(90deg, var(--secondary), #7DD3FC);
+        }
+
+        /* ========================================
+           ACTIVITY LIST
+           ======================================== */
+        .activity-list { display: flex; flex-direction: column; gap: 0; }
+        .activity-item {
+            display: flex; gap: 12px; padding: 12px 0;
+            border-bottom: 1px solid rgba(123,63,242,0.08);
+            position: relative;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            margin-top: 5px; flex-shrink: 0;
+        }
+        .activity-dot.purple { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+        .activity-dot.blue { background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+        .activity-dot.orange { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+        .activity-text {
+            font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+        }
+        .activity-text strong { color: var(--text); font-weight: 500; }
+        .activity-time {
+            font-size: 11px; color: var(--text-muted); margin-top: 2px;
+        }
+
+        /* ========================================
+           NEON BUTTONS
+           ======================================== */
+        .btn-neon {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 20px; border-radius: var(--radius-sm);
+            font-size: 13px; font-weight: 600;
+            background: linear-gradient(135deg, var(--primary), #5B2BD6);
+            color: #fff; border: 1px solid transparent;
+            transition: all var(--transition);
+            position: relative; overflow: hidden;
+        }
+        .btn-neon:hover {
+            box-shadow: 0 0 20px rgba(123,63,242,0.5), 0 0 40px rgba(123,63,242,0.2);
+            transform: translateY(-1px);
+        }
+        .btn-neon.outline {
+            background: transparent;
+            border: 1px solid var(--border-glow);
+            color: var(--secondary);
+        }
+        .btn-neon.outline:hover {
+            background: rgba(0,224,255,0.08);
+            box-shadow: 0 0 20px rgba(0,224,255,0.3);
+        }
+        .btn-neon.sm { padding: 6px 14px; font-size: 12px; }
+
+        /* Ripple effect */
+        .ripple {
+            position: absolute; border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* ========================================
+           DRAG HANDLES & WIDGET SYSTEM
+           ======================================== */
+        .widget-draggable { cursor: grab; }
+        .widget-draggable:active { cursor: grabbing; }
+        .widget-draggable.dragging {
+            opacity: 0.5; transform: scale(0.97);
+            box-shadow: 0 0 30px rgba(123,63,242,0.4);
+        }
+        .drag-handle {
+            color: var(--text-muted); font-size: 12px;
+            opacity: 0; transition: opacity var(--transition);
+        }
+        .widget-draggable:hover .drag-handle { opacity: 1; }
+
+        /* ========================================
+           AI ASSISTANT PANEL
+           ======================================== */
+        .ai-panel {
+            position: fixed; top: 0; right: 0; bottom: 0;
+            width: 380px; z-index: 200;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border-left: 1px solid var(--border-glow);
+            display: flex; flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.3);
+        }
+        .ai-panel.open { transform: translateX(0); }
+
+        .ai-panel-header {
+            padding: 20px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ai-panel-title {
+            font-size: 16px; font-weight: 700;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .ai-panel-title i {
+            color: var(--secondary);
+            text-shadow: 0 0 10px var(--secondary);
+        }
+        .ai-panel-close {
+            width: 32px; height: 32px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); transition: all var(--transition);
+        }
+        .ai-panel-close:hover { background: var(--surface-hover); color: var(--text); }
+
+        .ai-messages {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .ai-msg {
+            max-width: 85%; padding: 12px 16px;
+            border-radius: var(--radius); font-size: 13px;
+            line-height: 1.6; animation: msgIn 0.3s ease;
+        }
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-msg.bot {
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text-secondary); align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-msg.user {
+            background: linear-gradient(135deg, var(--primary), #5B2BD6);
+            color: #fff; align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-typing {
+            display: flex; gap: 4px; padding: 12px 16px;
+            align-self: flex-start;
+        }
+        .ai-typing span {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--text-muted);
+            animation: typingDot 1.4s ease-in-out infinite;
+        }
+        .ai-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .ai-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingDot {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        .ai-input-area {
+            padding: 16px; border-top: 1px solid var(--border);
+            display: flex; gap: 10px;
+        }
+        .ai-input {
+            flex: 1; padding: 10px 14px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text);
+            font-family: var(--font); font-size: 13px;
+            outline: none; transition: all var(--transition);
+        }
+        .ai-input::placeholder { color: var(--text-muted); }
+        .ai-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(123,63,242,0.15); }
+        .ai-send-btn {
+            width: 40px; height: 40px; border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition);
+        }
+        .ai-send-btn:hover { box-shadow: 0 0 16px rgba(123,63,242,0.4); transform: scale(1.05); }
+
+        /* AI quick actions */
+        .ai-quick-actions {
+            display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 12px;
+        }
+        .ai-quick-btn {
+            padding: 5px 12px; border-radius: 20px;
+            background: var(--surface); border: 1px solid var(--border);
+            font-size: 11px; color: var(--text-secondary);
+            transition: all var(--transition);
+        }
+        .ai-quick-btn:hover {
+            border-color: var(--primary); color: var(--text);
+            background: rgba(123,63,242,0.1);
+        }
+
+        /* ========================================
+           NOTIFICATION PANEL
+           ======================================== */
+        .notif-panel {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            width: 340px; background: var(--sidebar-bg);
+            backdrop-filter: blur(24px); border: 1px solid var(--border);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            opacity: 0; visibility: hidden; transform: translateY(-8px);
+            transition: all var(--transition); z-index: 60;
+        }
+        .notif-panel.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .notif-panel-header {
+            padding: 16px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .notif-panel-title { font-size: 14px; font-weight: 600; }
+        .notif-list { max-height: 320px; overflow-y: auto; }
+        .notif-item {
+            display: flex; gap: 12px; padding: 14px 16px;
+            border-bottom: 1px solid rgba(123,63,242,0.06);
+            transition: background var(--transition);
+        }
+        .notif-item:hover { background: var(--surface-hover); }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-icon {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; flex-shrink: 0;
+        }
+        .notif-icon.purple { background: rgba(123,63,242,0.15); color: var(--primary); }
+        .notif-icon.blue { background: rgba(0,224,255,0.12); color: var(--secondary); }
+        .notif-icon.orange { background: rgba(255,122,24,0.12); color: var(--accent); }
+        .notif-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+        .notif-text strong { color: var(--text); }
+        .notif-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+
+        /* ========================================
+           TOAST SYSTEM
+           ======================================== */
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            z-index: 500; display: flex; flex-direction: column-reverse;
+            gap: 10px; pointer-events: none;
+        }
+        .toast {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px; border-radius: var(--radius);
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px); border: 1px solid var(--border);
+            box-shadow: var(--shadow); pointer-events: auto;
+            animation: toastIn 0.4s ease;
+            min-width: 300px; max-width: 420px;
+        }
+        .toast.removing { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(40px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateX(40px) scale(0.95); }
+        }
+        .toast-icon { font-size: 18px; flex-shrink: 0; }
+        .toast-icon.success { color: #10B981; }
+        .toast-icon.error { color: #EF4444; }
+        .toast-icon.info { color: var(--secondary); }
+        .toast-icon.warning { color: var(--accent); }
+        .toast-body { flex: 1; }
+        .toast-title { font-size: 13px; font-weight: 600; }
+        .toast-message { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+        .toast-close {
+            color: var(--text-muted); font-size: 14px;
+            padding: 4px; transition: color var(--transition);
+        }
+        .toast-close:hover { color: var(--text); }
+
+        /* ========================================
+           FOOTER
+           ======================================== */
+        .app-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 12px; color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .app-footer a { color: var(--primary); transition: color var(--transition); }
+        .app-footer a:hover { color: var(--secondary); }
+
+        /* ========================================
+           PAGE SECTIONS (hidden by default)
+           ======================================== */
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.35s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Placeholder page content */
+        .placeholder-page {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 400px; text-align: center;
+        }
+        .placeholder-icon {
+            font-size: 48px; color: var(--text-muted);
+            margin-bottom: 16px; opacity: 0.5;
+        }
+        .placeholder-title {
+            font-size: 20px; font-weight: 600; margin-bottom: 8px;
+        }
+        .placeholder-desc {
+            font-size: 14px; color: var(--text-secondary); max-width: 400px;
+        }
+
+        /* Settings page */
+        .settings-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .setting-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 0; border-bottom: 1px solid rgba(123,63,242,0.08);
+        }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { font-size: 13px; }
+        .setting-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* Toggle switch */
+        .toggle-switch {
+            width: 44px; height: 24px; border-radius: 12px;
+            background: rgba(255,255,255,0.1); position: relative;
+            transition: background var(--transition); cursor: pointer;
+            flex-shrink: 0;
+        }
+        .toggle-switch.active { background: var(--primary); }
+        .toggle-switch::after {
+            content: ''; position: absolute;
+            top: 3px; left: 3px; width: 18px; height: 18px;
+            border-radius: 50%; background: #fff;
+            transition: transform var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch.active::after { transform: translateX(20px); }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+            .settings-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-w) !important;
+            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-area, .main-area.sidebar-collapsed { margin-left: 0 !important; }
+            .topbar-hamburger { display: flex; }
+            .main-content { padding: 16px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .topbar-profile-info { display: none; }
+            .topbar-clock { display: none; }
+            .ai-panel { width: 100%; }
+            .notif-panel { width: 300px; right: -40px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================
+         LOADING SCREEN
+         ======================================== -->
+    <div id="loader">
+        <div class="loader-logo-wrap">
+            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="NEXUS Logo">
+        </div>
+        <div class="loader-bar-track">
+            <div class="loader-bar-fill" id="loader-fill"></div>
+        </div>
+        <div class="loader-text" id="loader-text">Initializing system...</div>
+    </div>
+
+    <!-- ========================================
+         BACKGROUND EFFECTS
+         ======================================== -->
+    <div id="bg-grid"></div>
+    <canvas id="bg-particles"></canvas>
+
+    <!-- ========================================
+         SIDEBAR OVERLAY (mobile)
+         ======================================== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ========================================
+         APP WRAPPER
+         ======================================== -->
+    <div class="app-wrapper">
+
+        <!-- ========================================
+             SIDEBAR
+             ======================================== -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+            <div class="sidebar-logo">
+                <div class="sidebar-logo-img">
+                    <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="NEXUS">
+                </div>
+                <span class="sidebar-logo-text">NEXUS</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-title">Main</div>
+                <a href="#" class="sidebar-item active" data-page="dashboard" role="button">
+                    <i class="fas fa-th-large"></i>
+                    <span class="sidebar-label">Dashboard</span>
+                </a>
+                <a href="#" class="sidebar-item" data-page="analytics" role="button">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="sidebar-label">Analytics</span>
+                </a>
+                <a href="#" class="sidebar-item" data-page="projects" role="button">
+                    <i class="fas fa-folder-open"></i>
+                    <span class="sidebar-label">Projects</span>
+                    <span class="badge">3</span>
+                </a>
+
+                <div class="sidebar-section-title">Tools</div>
+                <a href="#" class="sidebar-item" data-page="automation" role="button">
+                    <i class="fas fa-robot"></i>
+                    <span class="sidebar-label">Automation</span>
+                </a>
+                <a href="#" class="sidebar-item" data-page="ai-tools" role="button">
+                    <i class="fas fa-brain"></i>
+                    <span class="sidebar-label">AI Tools</span>
+                </a>
+
+                <div class="sidebar-section-title">System</div>
+                <a href="#" class="sidebar-item" data-page="settings" role="button">
+                    <i class="fas fa-cog"></i>
+                    <span class="sidebar-label">Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-label="Toggle sidebar">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="sidebar-label">Collapse</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ========================================
+             MAIN AREA
+             ======================================== -->
+        <div class="main-area" id="mainArea">
+
+            <!-- TOP NAVBAR -->
+            <header class="topbar" role="banner">
+                <button class="topbar-hamburger" id="hamburgerBtn" aria-label="Open menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+
+                <div class="topbar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search commands, files, data..." aria-label="Search">
+                </div>
+
+                <div class="topbar-right">
+                    <div class="topbar-clock" id="clock" aria-live="polite">
+                        <span>00:00:00</span>
+                    </div>
+
+                    <button class="topbar-btn" id="soundToggleBtn" aria-label="Toggle sound" title="Toggle Sound">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+
+                    <button class="topbar-btn" id="themeToggleBtn" aria-label="Toggle theme" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+
+                    <div style="position:relative">
+                        <button class="topbar-btn" id="notifBtn" aria-label="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="dot"></span>
+                        </button>
+                        <div class="notif-panel" id="notifPanel" role="menu">
+                            <div class="notif-panel-header">
+                                <span class="notif-panel-title">Notifications</span>
+                                <button class="btn-neon sm outline" id="clearNotifsBtn">Clear all</button>
+                            </div>
+                            <div class="notif-list" id="notifList">
+                                <div class="notif-item">
+                                    <div class="notif-icon purple"><i class="fas fa-code-branch"></i></div>
+                                    <div>
+                                        <div class="notif-text"><strong>PR #247</strong> merged into main branch</div>
+                                        <div class="notif-time">2 min ago</div>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <div class="notif-icon blue"><i class="fas fa-server"></i></div>
+                                    <div>
+                                        <div class="notif-text">Deployment to <strong>prod-us-east</strong> completed</div>
+                                        <div class="notif-time">18 min ago</div>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <div class="notif-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
+                                    <div>
+                                        <div class="notif-text">API latency spike detected on <strong>/v2/process</strong></div>
+                                        <div class="notif-time">43 min ago</div>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <div class="notif-icon purple"><i class="fas fa-user-plus"></i></div>
+                                    <div>
+                                        <div class="notif-text"><strong>Elena Voss</strong> joined the AI Tools team</div>
+                                        <div class="notif-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="topbar-btn" id="aiToggleBtn" aria-label="AI Assistant" title="AI Assistant">
+                        <i class="fas fa-atom"></i>
+                    </button>
+
+                    <div class="topbar-profile" id="profileBtn" style="position:relative">
+                        <div class="topbar-profile-avatar">AK</div>
+                        <div class="topbar-profile-info">
+                            <div class="topbar-profile-name">Alex Koval</div>
+                            <div class="topbar-profile-role">Admin</div>
+                        </div>
+                        <div class="profile-dropdown" id="profileDropdown" role="menu">
+                            <a href="#" class="profile-dropdown-item" role="menuitem"><i class="fas fa-user"></i> My Profile</a>
+                            <a href="#" class="profile-dropdown-item" role="menuitem"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="#" class="profile-dropdown-item" role="menuitem"><i class="fas fa-key"></i> API Keys</a>
+                            <div class="profile-dropdown-divider"></div>
+                            <a href="#" class="profile-dropdown-item" role="menuitem" style="color:#EF4444"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ========================================
+                 MAIN CONTENT
+                 ======================================== -->
+            <main class="main-content" id="mainContent">
+
+                <!-- DASHBOARD PAGE -->
+                <section class="page-section active" id="page-dashboard">
+                    <div class="page-header">
+                        <h1 class="page-title">Command Center</h1>
+                        <p class="page-subtitle">Real-time system overview and performance metrics</p>
+                    </div>
+
+                    <!-- Stat Cards -->
+                    <div class="stats-grid">
+                        <div class="glass-card floating stat-card widget-draggable" draggable="true">
+                            <div class="stat-icon purple"><i class="fas fa-code-branch"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" data-count="1247">0</div>
+                                <div class="stat-label">Total Commits</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 12.5%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card floating stat-card widget-draggable" draggable="true" style="animation-delay:0.5s">
+                            <div class="stat-icon blue"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" data-count="89">0</div>
+                                <div class="stat-label">Active Tasks</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 8.3%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card floating stat-card widget-draggable" draggable="true" style="animation-delay:1s">
+                            <div class="stat-icon orange"><i class="fas fa-bolt"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" data-count="99" data-suffix=".7%">0</div>
+                                <div class="stat-label">System Uptime</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 0.2%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card floating stat-card widget-draggable" draggable="true" style="animation-delay:1.5s">
+                            <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" data-count="342">0</div>
+                                <div class="stat-label">Active Users</div>
+                                <div class="stat-change down"><i class="fas fa-arrow-down"></i> 2.1%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="charts-grid">
+                        <div class="glass-card widget-draggable" draggable="true">
+                            <div class="glass-card-header">
+                                <span class="glass-card-title">Performance Analytics</span>
+                                <div style="display:flex;gap:6px">
+                                    <button class="btn-neon sm outline chart-range active" data-range="7d">7D</button>
+                                    <button class="btn-neon sm outline chart-range" data-range="30d">30D</button>
+                                    <button class="btn-neon sm outline chart-range" data-range="90d">90D</button>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="height:280px">
+                                <canvas id="lineChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-card widget-draggable" draggable="true">
+                            <div class="glass-card-header">
+                                <span class="glass-card-title">Resource Distribution</span>
+                            </div>
+                            <div class="chart-container" style="height:280px">
+                                <canvas id="doughnutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom: Table + Activity + Progress -->
+                    <div class="bottom-grid">
+                        <div class="glass-card widget-draggable" draggable="true">
+                            <div class="glass-card-header">
+                                <span class="glass-card-title">Recent Projects</span>
+                                <button class="btn-neon sm outline">View All</button>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="name-cell">Neural Engine v3</td>
+                                        <td><span class="status-badge active">Active</span></td>
+                                        <td>
+                                            <div class="progress-track" style="width:100px;display:inline-block;vertical-align:middle">
+                                                <div class="progress-fill" style="width:78%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="name-cell">Data Pipeline API</td>
+                                        <td><span class="status-badge pending">Pending</span></td>
+                                        <td>
+                                            <div class="progress-track" style="width:100px;display:inline-block;vertical-align:middle">
+                                                <div class="progress-fill orange" style="width:45%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="name-cell">Quantum Mesh Net</td>
+                                        <td><span class="status-badge active">Active</span></td>
+                                        <td>
+                                            <div class="progress-track" style="width:100px;display:inline-block;vertical-align:middle">
+                                                <div class="progress-fill green" style="width:92%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="name-cell">Cipher Vault</td>
+                                        <td><span class="status-badge offline">Offline</span></td>
+                                        <td>
+                                            <div class="progress-track" style="width:100px;display:inline-block;vertical-align:middle">
+                                                <div class="progress-fill blue" style="width:23%"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="glass-card widget-draggable" draggable="true">
+                            <div class="glass-card-header">
+                                <span class="glass-card-title">System Resources</span>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">CPU Usage</span>
+                                    <span class="progress-value">73%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width:73%"></div>
+                                </div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">Memory</span>
+                                    <span class="progress-value">58%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill orange" style="width:58%"></div>
+                                </div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">Disk I/O</span>
+                                    <span class="progress-value">41%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill green" style="width:41%"></div>
+                                </div>
+                            </div>
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <span class="progress-label">Network</span>
+                                    <span class="progress-value">86%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill blue" style="width:86%"></div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+                                <div class="glass-card-title" style="margin-bottom:12px">Activity Feed</div>
+                                <div class="activity-list">
+                                    <div class="activity-item">
+                                        <div class="activity-dot purple"></div>
+                                        <div>
+                                            <div class="activity-text"><strong>Build #1892</strong> completed successfully</div>
+                                            <div class="activity-time">3 minutes ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-dot blue"></div>
+                                        <div>
+                                            <div class="activity-text"><strong>Model v2.4</strong> deployed to staging</div>
+                                            <div class="activity-time">12 minutes ago</div>
+                                        </div>
+                                    </div>
+                                    <div class="activity-item">
+                                        <div class="activity-dot orange"></div>
+                                        <div>
+                                            <div class="activity-text">Auto-scaling triggered for <strong>worker-pool-3</strong></div>
+                                            <div class="activity-time">28 minutes ago</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ANALYTICS PAGE -->
+                <section class="page-section" id="page-analytics">
+                    <div class="page-header">
+                        <h1 class="page-title">Analytics</h1>
+                        <p class="page-subtitle">Deep-dive into your data with advanced metrics and visualizations</p>
+                    </div>
+                    <div class="glass-card" style="margin-bottom:24px">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title">Traffic Overview</span>
+                            <div style="display:flex;gap:6px">
+                                <button class="btn-neon sm outline">Daily</button>
+                                <button class="btn-neon sm">Weekly</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height:320px">
+                            <canvas id="analyticsBarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon blue"><i class="fas fa-eye"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">48.2K</div>
+                                <div class="stat-label">Page Views</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 18.7%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon purple"><i class="fas fa-mouse-pointer"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">12.8K</div>
+                                <div class="stat-label">Unique Visitors</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 5.2%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">4m 32s</div>
+                                <div class="stat-label">Avg. Session</div>
+                                <div class="stat-change down"><i class="fas fa-arrow-down"></i> 1.3%</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon green"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">3.24%</div>
+                                <div class="stat-label">Conversion Rate</div>
+                                <div class="stat-change up"><i class="fas fa-arrow-up"></i> 0.8%</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PROJECTS PAGE -->
+                <section class="page-section" id="page-projects">
+                    <div class="page-header">
+                        <h1 class="page-title">Projects</h1>
+                        <p class="page-subtitle">Manage and track all active projects and repositories</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="glass-card-header">
+                            <span class="glass-card-title">All Projects</span>
+                            <button class="btn-neon sm"><i class="fas fa-plus"></i> New Project</button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Project Name</th>
+                                    <th>Repository</th>
+                                    <th>Branch</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="name-cell">Neural Engine v3</td>
+                                    <td>nexus/neural-engine</td>
+                                    <td><code style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">main</code></td>
+                                    <td><span class="status-badge active">Active</span></td>
+                                    <td>2 hours ago</td>
+                                </tr>
+                                <tr>
+                                    <td class="name-cell">Data Pipeline API</td>
+                                    <td>nexus/data-pipeline</td>
+                                    <td><code style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">feature/auth</code></td>
+                                    <td><span class="status-badge pending">Pending</span></td>
+                                    <td>5 hours ago</td>
+                                </tr>
+                                <tr>
+                                    <td class="name-cell">Quantum Mesh Net</td>
+                                    <td>nexus/quantum-mesh</td>
+                                    <td><code style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">develop</code></td>
+                                    <td><span class="status-badge active">Active</span></td>
+                                    <td>1 day ago</td>
+                                </tr>
+                                <tr>
+                                    <td class="name-cell">Cipher Vault</td>
+                                    <td>nexus/cipher-vault</td>
+                                    <td><code style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">main</code></td>
+                                    <td><span class="status-badge offline">Offline</span></td>
+                                    <td>3 days ago</td>
+                                </tr>
+                                <tr>
+                                    <td class="name-cell">Flux Scheduler</td>
+                                    <td>nexus/flux-sched</td>
+                                    <td><code style="font-family:var(--font-mono);font-size:12px;color:var(--secondary)">release/v2</code></td>
+                                    <td><span class="status-badge active">Active</span></td>
+                                    <td>6 hours ago</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- AUTOMATION PAGE -->
+                <section class="page-section" id="page-automation">
+                    <div class="page-header">
+                        <h1 class="page-title">Automation</h1>
+                        <p class="page-subtitle">Configure workflows, triggers, and automated pipelines</p>
+                    </div>
+                    <div class="stats-grid" style="margin-bottom:24px">
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon purple"><i class="fas fa-play-circle"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">24</div>
+                                <div class="stat-label">Active Workflows</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon green"><i class="fas fa-check-double"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">1,847</div>
+                                <div class="stat-label">Runs This Month</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon orange"><i class="fas fa-exclamation-circle"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Failed Runs</div>
+                            </div>
+                        </div>
+                        <div class="glass-card stat-card">
+                            <div class="stat-icon blue"><i class="fas fa-history"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value">2.4s</div>
+                                <div class="stat-label">Avg. Run Time</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="placeholder-page glass-card">
+                        <div class="placeholder-icon"><i class="fas fa-cogs"></i></div>
+                        <div class="placeholder-title">Workflow Builder</div>
+                        <div class="placeholder-desc">The visual workflow editor is being prepared for GitHub Actions integration. Connect your repository to get started.</div>
+                        <button class="btn-neon" style="margin-top:20px"><i class="fas fa-plug"></i> Connect GitHub</button>
+                    </div>
+                </section>
+
+                <!-- AI TOOLS PAGE -->
+                <section class="page-section" id="page-ai-tools">
+                    <div class="page-header">
+                        <h1 class="page-title">AI Tools</h1>
+                        <p class="page-subtitle">Access machine learning models, code generation, and intelligent assistants</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="glass-card" style="text-align:center;padding:32px">
+                            <div style="font-size:32px;color:var(--primary);margin-bottom:12px"><i class="fas fa-wand-magic-sparkles"></i></div>
+                            <div style="font-weight:600;margin-bottom:6px">Code Generator</div>
+                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">AI-powered code generation from natural language</div>
+                            <button class="btn-neon sm outline">Launch</button>
+                        </div>
+                        <div class="glass-card" style="text-align:center;padding:32px">
+                            <div style="font-size:32px;color:var(--secondary);margin-bottom:12px"><i class="fas fa-language"></i></div>
+                            <div style="font-weight:600;margin-bottom:6px">Smart Translator</div>
+                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Multi-language code and documentation translator</div>
+                            <button class="btn-neon sm outline">Launch</button>
+                        </div>
+                        <div class="glass-card" style="text-align:center;padding:32px">
+                            <div style="font-size:32px;color:var(--accent);margin-bottom:12px"><i class="fas fa-bug"></i></div>
+                            <div style="font-weight:600;margin-bottom:6px">Bug Detector</div>
+                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Automated code review and vulnerability scanning</div>
+                            <button class="btn-neon sm outline">Launch</button>
+                        </div>
+                        <div class="glass-card" style="text-align:center;padding:32px">
+                            <div style="font-size:32px;color:#10B981;margin-bottom:12px"><i class="fas fa-chart-pie"></i></div>
+                            <div style="font-weight:600;margin-bottom:6px">Data Analyzer</div>
+                            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px">Intelligent data analysis and visualization</div>
+                            <button class="btn-neon sm outline">Launch</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SETTINGS PAGE -->
+                <section class="page-section" id="page-settings">
+                    <div class="page-header">
+                        <h1 class="page-title">Settings</h1>
+                        <p class="page-subtitle">Customize your dashboard experience and system preferences</p>
+                    </div>
+                    <div class="settings-grid">
+                        <div class="glass-card">
+                            <div class="glass-card-title" style="margin-bottom:8px">Appearance</div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Dark Mode</div>
+                                    <div class="setting-desc">Use dark theme across the dashboard</div>
+                                </div>
+                                <div class="toggle-switch active" id="settingsDarkToggle"></div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Animations</div>
+                                    <div class="setting-desc">Enable smooth transitions and effects</div>
+                                </div>
+                                <div class="toggle-switch active" id="settingsAnimToggle"></div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Background Particles</div>
+                                    <div class="setting-desc">Show floating particle effects</div>
+                                </div>
+                                <div class="toggle-switch active" id="settingsParticlesToggle"></div>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="glass-card-title" style="margin-bottom:8px">Audio</div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">UI Sound Effects</div>
+                                    <div class="setting-desc">Play subtle sounds on interactions</div>
+                                </div>
+                                <div class="toggle-switch" id="settingsSoundToggle"></div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Volume</div>
+                                    <div class="setting-desc">Sound effect volume level</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <i class="fas fa-volume-down" style="color:var(--text-muted);font-size:12px"></i>
+                                    <input type="range" min="0" max="100" value="50" style="width:100px;accent-color:var(--primary)">
+                                    <i class="fas fa-volume-up" style="color:var(--text-muted);font-size:12px"></i>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Notification Sounds</div>
+                                    <div class="setting-desc">Play sound for new notifications</div>
+                                </div>
+                                <div class="toggle-switch" id="settingsNotifSoundToggle"></div>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="glass-card-title" style="margin-bottom:8px">Integration</div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">GitHub Connection</div>
+                                    <div class="setting-desc">Link your GitHub account for repo sync</div>
+                                </div>
+                                <button class="btn-neon sm outline"><i class="fab fa-github"></i> Connect</button>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Webhook URL</div>
+                                    <div class="setting-desc">Endpoint for event notifications</div>
+                                </div>
+                                <button class="btn-neon sm outline">Configure</button>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <div class="glass-card-title" style="margin-bottom:8px">Data</div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Auto-refresh Interval</div>
+                                    <div class="setting-desc">How often to refresh dashboard data</div>
+                                </div>
+                                <select style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;outline:none">
+                                    <option>5 seconds</option>
+                                    <option>15 seconds</option>
+                                    <option selected>30 seconds</option>
+                                    <option>1 minute</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <div>
+                                    <div class="setting-label">Clear Local Cache</div>
+                                    <div class="setting-desc">Remove all locally stored data</div>
+                                </div>
+                                <button class="btn-neon sm outline" style="border-color:rgba(239,68,68,0.3);color:#EF4444" id="clearCacheBtn">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="app-footer" role="contentinfo">
+                <span>NEXUS AI Dashboard v2.4.0</span>
+                <span>Built with precision <a href="#">Documentation</a> &middot; <a href="#">Changelog</a></span>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ========================================
+         AI ASSISTANT PANEL
+         ======================================== -->
+    <aside class="ai-panel" id="aiPanel" role="complementary" aria-label="AI Assistant">
+        <div class="ai-panel-header">
+            <div class="ai-panel-title">
+                <i class="fas fa-atom"></i> NEXUS AI
+            </div>
+            <button class="ai-panel-close" id="aiCloseBtn" aria-label="Close AI panel">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ai-quick-actions" id="aiQuickActions">
+            <button class="ai-quick-btn" data-query="System status overview">System Status</button>
+            <button class="ai-quick-btn" data-query="Show performance metrics">Performance</button>
+            <button class="ai-quick-btn" data-query="List active deployments">Deployments</button>
+            <button class="ai-quick-btn" data-query="Check for anomalies">Anomaly Scan</button>
+        </div>
+        <div class="ai-messages" id="aiMessages">
+            <div class="ai-msg bot">
+                Welcome to NEXUS AI Assistant. I can help you monitor systems, analyze data, and manage your infrastructure. What would you like to know?
+            </div>
+        </div>
+        <div class="ai-input-area">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Ask NEXUS anything..." aria-label="AI message input">
+            <button class="ai-send-btn" id="aiSendBtn" aria-label="Send message">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ========================================
+         TOAST CONTAINER
+         ======================================== -->
+    <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+
+    <!-- ========================================
+         JAVASCRIPT
+         ======================================== -->
+    <script>
+    (function() {
+        'use strict';
+
+        /* ========================================
+           STATE & CONFIGURATION
+           ======================================== */
+        const state = {
+            theme: localStorage.getItem('nexus-theme') || 'dark',
+            sidebarCollapsed: localStorage.getItem('nexus-sidebar') === 'true',
+            soundEnabled: localStorage.getItem('nexus-sound') === 'true',
+            particlesEnabled: localStorage.getItem('nexus-particles') !== 'false',
+            currentPage: 'dashboard',
+            charts: {}
+        };
+
+        /* ========================================
+           AUDIO ENGINE
+           ======================================== */
+        let audioCtx = null;
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        function playClickSound() {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.06, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.08);
+            } catch(e) {}
+        }
+
+        function playToggleSound() {
+            if (!state.soundEnabled) return;
+            try {
+                const ctx = getAudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.06);
+                gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.1);
+            } catch(e) {}
+        }
+
+        /* ========================================
+           LOADING SCREEN
+           ======================================== */
+        const loaderFill = document.getElementById('loader-fill');
+        const loaderText = document.getElementById('loader-text');
+        const loaderEl = document.getElementById('loader');
+        const loaderSteps = [
+            { pct: 20, text: 'Loading core modules...' },
+            { pct: 45, text: 'Connecting neural networks...' },
+            { pct: 65, text: 'Syncing data streams...' },
+            { pct: 85, text: 'Initializing interface...' },
+            { pct: 100, text: 'System ready.' }
+        ];
+
+        function runLoader(step) {
+            if (step >= loaderSteps.length) {
+                setTimeout(() => loaderEl.classList.add('hidden'), 400);
+                return;
+            }
+            loaderFill.style.width = loaderSteps[step].pct + '%';
+            loaderText.textContent = loaderSteps[step].text;
+            setTimeout(() => runLoader(step + 1), 350 + Math.random() * 200);
+        }
+
+        /* ========================================
+           PARTICLE SYSTEM
+           ======================================== */
+        const particleCanvas = document.getElementById('bg-particles');
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
+        let particleAnimId = null;
+
+        function initParticles() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+            particles = [];
+            const count = Math.min(60, Math.floor(window.innerWidth / 25));
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * particleCanvas.width,
+                    y: Math.random() * particleCanvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    r: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+
+        function drawParticles() {
+            if (!state.particlesEnabled) {
+                pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+                particleAnimId = requestAnimationFrame(drawParticles);
+                return;
+            }
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            const isDark = state.theme === 'dark';
+            const dotColor = isDark ? '123,63,242' : '123,63,242';
+            const lineColor = isDark ? '123,63,242' : '123,63,242';
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > particleCanvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > particleCanvas.height) p.vy *= -1;
+
+                pCtx.beginPath();
+                pCtx.arc(p.x, p.y, Math.max(0.1, p.r), 0, Math.PI * 2);
+                pCtx.fillStyle = `rgba(${dotColor},${p.alpha})`;
+                pCtx.fill();
+
+                /* Connection lines */
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        pCtx.beginPath();
+                        pCtx.moveTo(p.x, p.y);
+                        pCtx.lineTo(p2.x, p2.y);
+                        const la = (1 - dist / 120) * 0.12;
+                        pCtx.strokeStyle = `rgba(${lineColor},${la})`;
+                        pCtx.lineWidth = 0.5;
+                        pCtx.stroke();
+                    }
+                }
+            }
+            particleAnimId = requestAnimationFrame(drawParticles);
+        }
+
+        /* ========================================
+           THEME MANAGEMENT
+           ======================================== */
+        function applyTheme(theme) {
+            state.theme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('nexus-theme', theme);
+            const icon = document.querySelector('#themeToggleBtn i');
+            icon.className = theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+
+            /* Sync settings toggle */
+            const settingsToggle = document.getElementById('settingsDarkToggle');
+            if (settingsToggle) {
+                settingsToggle.classList.toggle('active', theme === 'dark');
+            }
+
+            /* Rebuild charts with new colors */
+            if (state.currentPage === 'dashboard') initDashboardCharts();
+            if (state.currentPage === 'analytics') initAnalyticsChart();
+        }
+
+        /* ========================================
+           SIDEBAR
+           ======================================== */
+        const sidebar = document.getElementById('sidebar');
+        const mainArea = document.getElementById('mainArea');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar(collapse) {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                sidebar.classList.toggle('mobile-open', !collapse);
+                overlay.classList.toggle('visible', !collapse);
+            } else {
+                state.sidebarCollapsed = collapse;
+                sidebar.classList.toggle('collapsed', collapse);
+                mainArea.classList.toggle('sidebar-collapsed', collapse);
+                localStorage.setItem('nexus-sidebar', collapse);
+            }
+            playToggleSound();
+        }
+
+        document.getElementById('sidebarCollapseBtn').addEventListener('click', () => {
+            toggleSidebar(!state.sidebarCollapsed);
+        });
+        document.getElementById('hamburgerBtn').addEventListener('click', () => {
+            toggleSidebar(sidebar.classList.contains('mobile-open'));
+        });
+        overlay.addEventListener('click', () => {
+            toggleSidebar(true);
+        });
+
+        /* ========================================
+           NAVIGATION / PAGE SWITCHING
+           ======================================== */
+        const navItems = document.querySelectorAll('.sidebar-item[data-page]');
+        const pageSections = document.querySelectorAll('.page-section');
+        const mainContent = document.getElementById('mainContent');
+
+        function switchPage(page) {
+            if (page === state.currentPage) return;
+            playClickSound();
+
+            /* Fade out */
+            mainContent.classList.add('fade-out');
+            mainContent.classList.remove('fade-in');
+
+            setTimeout(() => {
+                navItems.forEach(n => n.classList.remove('active'));
+                const activeNav = document.querySelector(`.sidebar-item[data-page="${page}"]`);
+                if (activeNav) activeNav.classList.add('active');
+
+                pageSections.forEach(s => s.classList.remove('active'));
+                const activePage = document.getElementById('page-' + page);
+                if (activePage) activePage.classList.add('active');
+
+                state.currentPage = page;
+
+                /* Fade in */
+                mainContent.classList.remove('fade-out');
+                mainContent.classList.add('fade-in');
+
+                /* Init charts for the new page */
+                if (page === 'dashboard') setTimeout(initDashboardCharts, 50);
+                if (page === 'analytics') setTimeout(initAnalyticsChart, 50);
+
+                /* Close mobile sidebar */
+                if (window.innerWidth <= 768) toggleSidebar(true);
+
+                /* Animate stat counters */
+                animateCounters();
+            }, 250);
+        }
+
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchPage(item.dataset.page);
+            });
+        });
+
+        /* ========================================
+           REAL-TIME CLOCK
+           ======================================== */
+        const clockEl = document.getElementById('clock');
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            clockEl.innerHTML = `<span>${h}:${m}:${s}</span>`;
+        }
+
+        /* ========================================
+           DROPDOWNS
+           ======================================== */
+        const profileBtn = document.getElementById('profileBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const notifBtn = document.getElementById('notifBtn');
+        const notifPanel = document.getElementById('notifPanel');
+
+        function closeAllDropdowns() {
+            profileDropdown.classList.remove('open');
+            notifPanel.classList.remove('open');
+        }
+
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playClickSound();
+            const isOpen = profileDropdown.classList.contains('open');
+            closeAllDropdowns();
+            if (!isOpen) profileDropdown.classList.add('open');
+        });
+
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playClickSound();
+            const isOpen = notifPanel.classList.contains('open');
+            closeAllDropdowns();
+            if (!isOpen) notifPanel.classList.add('open');
+        });
+
+        document.addEventListener('click', closeAllDropdowns);
+
+        /* Clear notifications */
+        document.getElementById('clearNotifsBtn').addEventListener('click', () => {
+            document.getElementById('notifList').innerHTML = `
+                <div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px">
+                    <i class="fas fa-bell-slash" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4"></i>
+                    No new notifications
+                </div>`;
+            const dot = notifBtn.querySelector('.dot');
+            if (dot) dot.style.display = 'none';
+            playClickSound();
+        });
+
+        /* ========================================
+           SOUND TOGGLE
+           ======================================== */
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        function updateSoundUI() {
+            soundToggleBtn.querySelector('i').className = state.soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+            const st = document.getElementById('settingsSoundToggle');
+            if (st) st.classList.toggle('active', state.soundEnabled);
+        }
+        soundToggleBtn.addEventListener('click', () => {
+            state.soundEnabled = !state.soundEnabled;
+            localStorage.setItem('nexus-sound', state.soundEnabled);
+            updateSoundUI();
+            if (state.soundEnabled) playClickSound();
+        });
+
+        /* ========================================
+           THEME TOGGLE
+           ======================================== */
+        document.getElementById('themeToggleBtn').addEventListener('click', () => {
+            playToggleSound();
+            applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+        });
+
+        /* ========================================
+           SETTINGS TOGGLES
+           ======================================== */
+        document.getElementById('settingsDarkToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            applyTheme(this.classList.contains('active') ? 'dark' : 'light');
+        });
+        document.getElementById('settingsSoundToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            state.soundEnabled = this.classList.contains('active');
+            localStorage.setItem('nexus-sound', state.soundEnabled);
+            updateSoundUI();
+            if (state.soundEnabled) playClickSound();
+        });
+        document.getElementById('settingsAnimToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+        document.getElementById('settingsParticlesToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            state.particlesEnabled = this.classList.contains('active');
+            localStorage.setItem('nexus-particles', state.particlesEnabled);
+        });
+        document.getElementById('clearCacheBtn').addEventListener('click', () => {
+            localStorage.clear();
+            showToast('success', 'Cache Cleared', 'All local storage data has been removed.');
+            playClickSound();
+        });
+
+        /* ========================================
+           AI ASSISTANT
+           ======================================== */
+        const aiPanel = document.getElementById('aiPanel');
+        const aiMessages = document.getElementById('aiMessages');
+        const aiInput = document.getElementById('aiInput');
+
+        document.getElementById('aiToggleBtn').addEventListener('click', () => {
+            aiPanel.classList.add('open');
+            playClickSound();
+            setTimeout(() => aiInput.focus(), 400);
+        });
+        document.getElementById('aiCloseBtn').addEventListener('click', () => {
+            aiPanel.classList.remove('open');
+            playClickSound();
+        });
+
+        /* AI response database */
+        const aiResponses = {
+            'system status': 'All systems operational. CPU at 73%, Memory at 58%, Network throughput stable at 86%. No critical alerts detected in the last 24 hours.',
+            'performance': 'Current performance metrics show 99.7% uptime with an average response time of 142ms. The neural processing pipeline is running at optimal efficiency with 89 active tasks queued.',
+            'deploy': 'There are 3 active deployments:\n• prod-us-east — v2.4.1 (Stable)\n• staging-eu-west — v2.5.0-beta (Testing)\n• dev-ap-south — v2.5.1-dev (Building)',
+            'anomal': 'Anomaly scan complete. Detected 2 minor irregularities:\n1. API latency spike on /v2/process (resolved)\n2. Memory leak pattern in worker-pool-3 (monitoring)\nNo critical threats identified.',
+            'default': 'I can help you with system monitoring, performance analysis, deployment management, and anomaly detection. Try asking about specific areas of your infrastructure.'
+        };
+
+        function getAIResponse(query) {
+            const q = query.toLowerCase();
+            if (q.includes('status') || q.includes('system')) return aiResponses['system status'];
+            if (q.includes('performance') || q.includes('metric')) return aiResponses['performance'];
+            if (q.includes('deploy') || q.includes('release')) return aiResponses['deploy'];
+            if (q.includes('anomal') || q.includes('scan') || q.includes('threat')) return aiResponses['anomal'];
+            if (q.includes('hello') || q.includes('hi') || q.includes('hey')) return 'Hello! I\'m NEXUS AI, your intelligent dashboard assistant. How can I help you today?';
+            if (q.includes('help')) return 'Available commands: system status, performance metrics, deployment list, anomaly scan. You can also ask me anything about your infrastructure.';
+            if (q.includes('github') || q.includes('repo')) return 'GitHub integration is being prepared. Once connected, I\'ll be able to provide real-time repository insights, PR analysis, and deployment triggers.';
+            if (q.includes('thank')) return 'You\'re welcome! I\'m always here to help. Is there anything else you\'d like to know?';
+            return aiResponses['default'];
+        }
+
+        function sendAIMessage(text) {
+            if (!text.trim()) return;
+            playClickSound();
+
+            /* Add user message */
+            const userMsg = document.createElement('div');
+            userMsg.className = 'ai-msg user';
+            userMsg.textContent = text;
+            aiMessages.appendChild(userMsg);
+            aiInput.value = '';
+
+            /* Scroll to bottom */
+            aiMessages.scrollTop = aiMessages.scrollHeight;
+
+            /* Show typing indicator */
+            const typing = document.createElement('div');
+            typing.className = 'ai-typing';
+            typing.innerHTML = '<span></span><span></span><span></span>';
+            aiMessages.appendChild(typing);
+            aiMessages.scrollTop = aiMessages.scrollHeight;
+
+            /* Generate response after delay */
+            const delay = 800 + Math.random() * 1200;
+            setTimeout(() => {
+                typing.remove();
+                const botMsg = document.createElement('div');
+                botMsg.className = 'ai-msg bot';
+                botMsg.textContent = getAIResponse(text);
+                aiMessages.appendChild(botMsg);
+                aiMessages.scrollTop = aiMessages.scrollHeight;
+            }, delay);
+        }
+
+        document.getElementById('aiSendBtn').addEventListener('click', () => {
+            sendAIMessage(aiInput.value);
+        });
+        aiInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendAIMessage(aiInput.value);
+        });
+
+        /* Quick action buttons */
+        document.getElementById('aiQuickActions').addEventListener('click', (e) => {
+            const btn = e.target.closest('.ai-quick-btn');
+            if (btn) sendAIMessage(btn.dataset.query);
+        });
+
+        /* ========================================
+           TOAST NOTIFICATION SYSTEM
+           ======================================== */
+        const toastContainer = document.getElementById('toastContainer');
+
+        function showToast(type, title, message, duration) {
+            duration = duration || 4000;
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-times-circle',
+                info: 'fas fa-info-circle',
+                warning: 'fas fa-exclamation-triangle'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <i class="${icons[type] || icons.info} toast-icon ${type}"></i>
+                <div class="toast-body">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" aria-label="Close"><i class="fas fa-times"></i></button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const closeBtn = toast.querySelector('.toast-close');
+            const removeToast = () => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            };
+            closeBtn.addEventListener('click', removeToast);
+            setTimeout(removeToast, duration);
+        }
+
+        /* ========================================
+           RIPPLE EFFECT
+           ======================================== */
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-neon');
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        /* ========================================
+           ANIMATED COUNTERS
+           ======================================== */
+        function animateCounters() {
+            document.querySelectorAll('.page-section.active .stat-value[data-count]').forEach(el => {
+                const target = parseInt(el.dataset.count);
+                const suffix = el.dataset.suffix || '';
+                const duration = 1500;
+                const start = performance.now();
+
+                function update(now) {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                    const current = Math.floor(eased * target);
+                    el.textContent = current.toLocaleString() + suffix;
+                    if (progress < 1) requestAnimationFrame(update);
+                }
+                requestAnimationFrame(update);
+            });
+        }
+
+        /* ========================================
+           CHARTS — Dashboard
+           ======================================== */
+        function getChartColors() {
+            const isDark = state.theme === 'dark';
+            return {
+                grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+                text: isDark ? '#6B7394' : '#8890A8',
+                primary: 'rgba(123,63,242,0.8)',
+                primaryBg: 'rgba(123,63,242,0.12)',
+                secondary: 'rgba(0,224,255,0.8)',
+                secondaryBg: 'rgba(0,224,255,0.12)',
+                accent: 'rgba(255,122,24,0.8)',
+                accentBg: 'rgba(255,122,24,0.12)',
+                green: 'rgba(16,185,129,0.8)',
+            };
+        }
+
+        function initDashboardCharts() {
+            /* Destroy existing charts */
+            if (state.charts.line) state.charts.line.destroy();
+            if (state.charts.doughnut) state.charts.doughnut.destroy();
+
+            const c = getChartColors();
+
+            /* Line Chart */
+            const lineCtx = document.getElementById('lineChart');
+            if (lineCtx) {
+                state.charts.line = new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [
+                            {
+                                label: 'API Requests',
+                                data: [1200, 1900, 1500, 2200, 2800, 2400, 3100],
+                                borderColor: c.primary,
+                                backgroundColor: c.primaryBg,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 7,
+                                pointBackgroundColor: c.primary,
+                                pointBorderColor: 'transparent',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Throughput',
+                                data: [800, 1200, 1100, 1800, 2100, 1900, 2600],
+                                borderColor: c.secondary,
+                                backgroundColor: c.secondaryBg,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 7,
+                                pointBackgroundColor: c.secondary,
+                                pointBorderColor: 'transparent',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: 'index' },
+                        plugins: {
+                            legend: {
+                                labels: { color: c.text, font: { family: 'Poppins', size: 11 }, boxWidth: 12, padding: 16 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(10,15,28,0.9)',
+                                titleColor: '#EAF0FF',
+                                bodyColor: '#9FB3FF',
+                                borderColor: 'rgba(123,63,242,0.3)',
+                                borderWidth: 1,
+                                cornerRadius: 8,
+                                padding: 12,
+                                titleFont: { family: 'Poppins', weight: '600' },
+                                bodyFont: { family: 'Poppins' }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { color: c.grid }, ticks: { color: c.text, font: { family: 'Poppins', size: 11 } } },
+                            y: { grid: { color: c.grid }, ticks: { color: c.text, font: { family: 'Poppins', size: 11 } } }
+                        },
+                        animation: { duration: 1200, easing: 'easeOutQuart' }
+                    }
+                });
+            }
+
+            /* Doughnut Chart */
+            const doughCtx = document.getElementById('doughnutChart');
+            if (doughCtx) {
+                state.charts.doughnut = new Chart(doughCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Compute', 'Storage', 'Network', 'Memory', 'Other'],
+                        datasets: [{
+                            data: [35, 25, 20, 15, 5],
+                            backgroundColor: [
+                                c.primary,
+                                c.secondary,
+                                c.accent,
+                                c.green,
+                                'rgba(123,63,242,0.25)'
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '68%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: c.text, font: { family: 'Poppins', size: 11 }, boxWidth: 10, padding: 12 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(10,15,28,0.9)',
+                                titleColor: '#EAF0FF',
+                                bodyColor: '#9FB3FF',
+                                borderColor: 'rgba(123,63,242,0.3)',
+                                borderWidth: 1,
+                                cornerRadius: 8,
+                                padding: 12,
+                                titleFont: { family: 'Poppins', weight: '600' },
+                                bodyFont: { family: 'Poppins' }
+                            }
+                        },
+                        animation: { animateRotate: true, duration: 1400 }
+                    }
+                });
+            }
+        }
+
+        /* Chart range buttons */
+        document.querySelectorAll('.chart-range').forEach(btn => {
+            btn.addEventListener('click', () => {
+                playClickSound();
+                document.querySelectorAll('.chart-range').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const range = btn.dataset.range;
+                const dataMap = {
+                    '7d': { labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], d1: [1200,1900,1500,2200,2800,2400,3100], d2: [800,1200,1100,1800,2100,1900,2600] },
+                    '30d': { labels: ['W1','W2','W3','W4'], d1: [8500,12300,10800,14200], d2: [6200,9100,8400,11600] },
+                    '90d': { labels: ['Jan','Feb','Mar'], d1: [32000,41000,38000], d2: [24000,33000,29000] }
+                };
+                const d = dataMap[range];
+                if (d && state.charts.line) {
+                    state.charts.line.data.labels = d.labels;
+                    state.charts.line.data.datasets[0].data = d.d1;
+                    state.charts.line.data.datasets[1].data = d.d2;
+                    state.charts.line.update('active');
+                }
+            });
+        });
+
+        /* ========================================
+           CHARTS — Analytics page
+           ======================================== */
+        function initAnalyticsChart() {
+            if (state.charts.analyticsBar) state.charts.analyticsBar.destroy();
+            const barCtx = document.getElementById('analyticsBarChart');
+            if (!barCtx) return;
+            const c = getChartColors();
+
+            state.charts.analyticsBar = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [
+                        {
+                            label: 'Organic',
+                            data: [4200, 5800, 4900, 7200, 6800, 8100],
+                            backgroundColor: c.primary,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'Direct',
+                            data: [2100, 2800, 2400, 3600, 3200, 4100],
+                            backgroundColor: c.secondary,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'Referral',
+                            data: [1400, 1800, 1600, 2100, 1900, 2600],
+                            backgroundColor: c.accent,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: c.text, font: { family: 'Poppins', size: 11 }, boxWidth: 12, padding: 16 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10,15,28,0.9)',
+                            titleColor: '#EAF0FF', bodyColor: '#9FB3FF',
+                            borderColor: 'rgba(123,63,242,0.3)', borderWidth: 1,
+                            cornerRadius: 8, padding: 12,
+                            titleFont: { family: 'Poppins', weight: '600' },
+                            bodyFont: { family: 'Poppins' }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: c.text, font: { family: 'Poppins', size: 11 } } },
+                        y: { grid: { color: c.grid }, ticks: { color: c.text, font: { family: 'Poppins', size: 11 } } }
+                    },
+                    animation: { duration: 1200, easing: 'easeOutQuart' }
+                }
+            });
+        }
+
+        /* ========================================
+           DRAGGABLE WIDGETS
+           ======================================== */
+        let dragSrc = null;
+
+        document.querySelectorAll('.widget-draggable').forEach(el => {
+            el.addEventListener('dragstart', function(e) {
+                dragSrc = this;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', '');
+            });
+            el.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+                document.querySelectorAll('.widget-draggable').forEach(w => w.style.outline = '');
+            });
+            el.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.style.outline = '1px dashed var(--border-glow)';
+            });
+            el.addEventListener('dragleave', function() {
+                this.style.outline = '';
+            });
+            el.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.outline = '';
+                if (dragSrc && dragSrc !== this) {
+                    /* Swap positions in DOM within same parent */
+                    const parent = this.parentNode;
+                    const srcNext = dragSrc.nextElementSibling;
+                    const tgtNext = this.nextElementSibling;
+
+                    if (srcNext === this) {
+                        parent.insertBefore(this, dragSrc);
+                    } else if (tgtNext === dragSrc) {
+                        parent.insertBefore(dragSrc, this);
+                    } else {
+                        const placeholder = document.createElement('div');
+                        parent.insertBefore(placeholder, dragSrc);
+                        parent.insertBefore(dragSrc, this);
+                        parent.insertBefore(this, placeholder);
+                        parent.removeChild(placeholder);
+                    }
+                    playClickSound();
+                    showToast('info', 'Widget Moved', 'Layout updated successfully.', 2000);
+                }
+            });
+        });
+
+        /* ========================================
+           SEARCH BAR
+           ======================================== */
+        const searchInput = document.querySelector('.topbar-search input');
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const query = searchInput.value.trim().toLowerCase();
+                if (!query) return;
+                playClickSound();
+
+                /* Try to match a page */
+                const pageMap = {
+                    'dashboard': 'dashboard', 'home': 'dashboard',
+                    'analytics': 'analytics', 'stats': 'analytics', 'charts': 'analytics',
+                    'projects': 'projects', 'repos': 'projects', 'repositories': 'projects',
+                    'automation': 'automation', 'workflows': 'automation', 'ci': 'automation', 'cd': 'automation',
+                    'ai': 'ai-tools', 'tools': 'ai-tools', 'machine learning': 'ai-tools',
+                    'settings': 'settings', 'config': 'settings', 'preferences': 'settings'
+                };
+
+                let matched = false;
+                for (const [key, page] of Object.entries(pageMap)) {
+                    if (query.includes(key)) {
+                        switchPage(page);
+                        searchInput.value = '';
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    showToast('info', 'Search', `No results for "${searchInput.value}". Try: dashboard, analytics, projects...`, 3000);
+                }
+            }
+        });
+
+        /* ========================================
+           WINDOW RESIZE
+           ======================================== */
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                particleCanvas.width = window.innerWidth;
+                particleCanvas.height = window.innerHeight;
+                /* Reset sidebar state for desktop */
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('visible');
+                    if (state.sidebarCollapsed) {
+                        sidebar.classList.add('collapsed');
+                        mainArea.classList.add('sidebar-collapsed');
+                    }
+                }
+            }, 150);
+        });
+
+        /* ========================================
+           INITIALIZATION
+           ======================================== */
+        function init() {
+            /* Apply saved theme */
+            applyTheme(state.theme);
+
+            /* Apply sidebar state (desktop only) */
+            if (state.sidebarCollapsed && window.innerWidth > 768) {
+                sidebar.classList.add('collapsed');
+                mainArea.classList.add('sidebar-collapsed');
+            }
+
+            /* Sound state */
+            updateSoundUI();
+
+            /* Start clock */
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            /* Start particles */
+            initParticles();
+            drawParticles();
+
+            /* Run loading screen then reveal dashboard */
+            runLoader(0);
+
+            /* Init dashboard charts after load */
+            setTimeout(() => {
+                initDashboardCharts();
+                animateCounters();
+            }, 2200);
+
+            /* Welcome toast */
+            setTimeout(() => {
+                showToast('success', 'Welcome Back', 'All systems are operational. 3 updates available.', 5000);
+            }, 2800);
+        }
+
+        /* Start the app */
+        init();
+
+    })();
+    </script>
+</body>
+</html>
