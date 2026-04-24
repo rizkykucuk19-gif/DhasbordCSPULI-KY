@@ -823,7 +823,7 @@ window.copyTotalWin=()=>{const v=$('#totalWin').textContent;navigator.clipboard.
 window.resetAnalyzer=()=>{$('#textInput').value='';runAnalyzer();toast(T[lang].reset)};
 
 /* ===== BRAND LOGO ===== */
- $('#brandLogo').addEventListener('click',function(){sparkle(this);this.style.transform='scale(1.2) rotate(360deg)';this.style.boxShadow='0 0 35px rgba(123,63,242,.7)';setTimeout(()=>{this.style.transform='';this.style.boxShadow=''},500)});
+ $('.sb-logo-img').addEventListener('click', function(){sparkle(this);this.style.transform='scale(1.2) rotate(360deg)';this.style.boxShadow='0 0 35px rgba(123,63,242,.7)';setTimeout(()=>{this.style.transform='';this.style.boxShadow=''},500)});
 
 /* ===== KEYBOARD ===== */
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeShio()}});
