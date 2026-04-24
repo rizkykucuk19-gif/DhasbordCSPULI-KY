@@ -4,17 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Nexus Dashboard | Rizky Prayogi</title>
-    <!-- Google Fonts & Smooth Font Rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <!-- Font Awesome 6 (Free CDN) for extra icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', sans-serif;
             background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
@@ -24,7 +18,7 @@
             color: #f1f5f9;
         }
 
-        /* ========== SIDEBAR MODERN - GLASSMORPHIC + DYNAMIC ========== */
+        /* SIDEBAR GLASSMORPHIC */
         .sidebar {
             width: 280px;
             background: rgba(18, 25, 45, 0.75);
@@ -33,181 +27,93 @@
             padding: 28px 20px;
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease;
-            z-index: 10;
             box-shadow: 8px 0 32px rgba(0, 0, 0, 0.3);
         }
 
-        /* Logo + Brand Area */
         .brand-area {
             display: flex;
             align-items: center;
             gap: 14px;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.3);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
         }
+
         .logo-wrapper {
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             background: #0f172a;
-            border-radius: 16px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(56, 189, 248, 0.3);
-            transition: transform 0.2s ease;
-        }
-        .logo-wrapper img {
-            width: 42px;
-            height: 42px;
-            object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
-        .brand-text h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF, #38bdf8);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.3px;
-        }
-        .brand-text p {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            letter-spacing: 0.5px;
-            margin-top: 2px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            overflow: hidden;
         }
 
-        /* Navigation Buttons - Premium & Animated */
+        .logo-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-text h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* NAVIGATION */
         .nav-btn {
             width: 100%;
             padding: 14px 18px;
-            margin: 10px 0;
-            background: rgba(30, 41, 59, 0.6);
-            border: none;
+            margin: 8px 0;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid transparent;
             color: #e2e8f0;
-            font-size: 1rem;
-            font-weight: 500;
+            border-radius: 12px;
             cursor: pointer;
-            border-radius: 18px;
-            text-align: left;
-            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             display: flex;
             align-items: center;
-            gap: 14px;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(56, 189, 248, 0);
-            position: relative;
-            overflow: hidden;
-        }
-        .nav-btn i {
-            font-size: 1.25rem;
-            width: 28px;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-        .nav-btn span {
-            flex: 1;
-        }
-        .nav-btn::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background: #38bdf8;
-            transform: scaleY(0);
-            transition: transform 0.2s;
-            border-radius: 2px;
-        }
-        .nav-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: rgba(56, 189, 248, 0.5);
-            transform: translateX(6px);
-            color: white;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-        }
-        .nav-btn:hover i {
-            transform: scale(1.08);
-            color: #38bdf8;
-        }
-        .nav-btn:hover::before {
-            transform: scaleY(1);
-        }
-        .nav-btn.active {
-            background: linear-gradient(95deg, rgba(56, 189, 248, 0.25), rgba(56, 189, 248, 0.05));
-            border-left: 2px solid #38bdf8;
-            border-color: #38bdf8;
-            color: white;
-            box-shadow: 0 5px 12px rgba(0, 150, 255, 0.2);
-        }
-        .nav-btn.active i {
-            color: #38bdf8;
-            text-shadow: 0 0 6px #38bdf8;
+            gap: 12px;
+            transition: all 0.3s ease;
         }
 
-        /* Main Content Area with smooth animation */
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.5);
+            color: #38bdf8;
+            transform: translateX(5px);
+        }
+
+        .nav-btn i { font-size: 1.1rem; }
+
+        /* CONTENT AREA */
         .content {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            margin: 20px 24px 20px 10px;
-            border-radius: 32px;
+            margin: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 25px 45px -12px black;
-            background: rgba(255,255,255,0.02);
-            backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .iframe-container {
-            width: 100%;
-            height: 100%;
-            border-radius: 28px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            background: #f8fafc;
-        }
+
         iframe {
             width: 100%;
             height: 100%;
             border: none;
-            background: #fff;
-            transition: opacity 0.25s ease-in-out;
-            opacity: 1;
-        }
-        /* iframe loading transition (smooth) */
-        iframe.loading {
-            opacity: 0.6;
+            background: #fff; /* Agar konten dashboard putih tetap bersih */
         }
 
-        /* custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #38bdf8;
-            border-radius: 8px;
-        }
-
-        /* Responsive small touch */
-        @media (max-width: 700px) {
-            .sidebar { width: 240px; padding: 20px 12px;}
-            .nav-btn { padding: 10px 14px; font-size: 0.85rem; gap: 10px;}
-            .brand-text h2 { font-size: 1.1rem;}
-        }
-        
-        /* subtle glow animation on hover for logo */
-        .logo-wrapper {
-            transition: all 0.25s;
-        }
-        .logo-wrapper:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 12px rgba(56,189,248,0.6);
+        /* Footer Sidebar */
+        .footer-sidebar {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.7rem;
+            opacity: 0.4;
+            padding-top: 20px;
         }
     </style>
 </head>
@@ -216,360 +122,54 @@
 <div class="sidebar">
     <div class="brand-area">
         <div class="logo-wrapper">
-            <!-- Logo dari link yang diberikan (resmi) -->
-            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="Rizky Prayogi Logo" onerror="this.src='https://via.placeholder.com/42?text=RP'">
+            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="IKY Logo">
         </div>
         <div class="brand-text">
             <h2>RIZKY PRAYOGI</h2>
-            <p>✦ NEXUS DASHBOARD ✦</p>
+            <p style="font-size: 0.6rem; color: #38bdf8;">DASHBOARD V2.0</p>
         </div>
     </div>
     
-    <div style="flex:1; margin-top: 12px;">
-        <button class="nav-btn" data-page="filter-scetter.html">
-            <i class="fas fa-filter"></i> <span>🎰 Filter Scetter</span>
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="loadPage('filter-scetter.html', this)">
+            <i class="fas fa-filter"></i> <span>Filter Scetter</span>
         </button>
-        <button class="nav-btn" data-page="pembukuan.html">
-            <i class="fas fa-coins"></i> <span>PROMO EVEN</span>
+        
+        <button class="nav-btn" onclick="loadPage('pembukuan.html', this)">
+            <i class="fas fa-wallet"></i> <span>Pembukuan Duit</span>
         </button>
-        <button class="nav-btn" data-page="notes_cs.html">
-            <i class="fas fa-pen-alt"></i> <span>PREDIKSI TOGEL</span>
+        
+        <button class="nav-btn" onclick="loadPage('notes_cs.html', this)">
+            <i class="fas fa-sticky-note"></i> <span>Notes CS Line</span>
         </button>
     </div>
-    
-    <div style="margin-top: auto; font-size: 0.7rem; text-align: center; opacity: 0.5; padding: 20px 0 8px;">
-        <i class="fas fa-bolt"></i> realtime sync • v2.0
+
+    <div class="footer-sidebar">
+        <p>© 2026 RIZKY PRAYOGI • RPM</p>
     </div>
 </div>
 
 <div class="content">
-    <div class="iframe-container">
-        <iframe id="mainFrame" src="home_content.html" title="Dashboard Panel"></iframe>
-    </div>
+    <iframe id="mainFrame" src="filter-scetter.html"></iframe>
 </div>
 
 <script>
-    // Animasi halus & preload adaptive
-    const iframe = document.getElementById('mainFrame');
-    const buttons = document.querySelectorAll('.nav-btn');
-    
-    // Fungsi untuk load page dengan efek transisi yang mulus (lebih smooth)
-    let activeButton = null;
-    
-    function setActiveButton(btn) {
-        buttons.forEach(button => button.classList.remove('active'));
-        if (btn) btn.classList.add('active');
-        activeButton = btn;
-    }
-    
-    // Fungsi load dengan transisi opacity dan slight loader feel
-    let isTransitioning = false;
-    
-    function loadPage(url, clickedBtn = null) {
-        if (isTransitioning) return;
-        if (!url) return;
+    function loadPage(url, btn) {
+        // Ganti src Iframe
+        const frame = document.getElementById('mainFrame');
+        frame.style.opacity = '0.5';
         
-        // jika button yang diklik, set active style
-        if (clickedBtn) {
-            setActiveButton(clickedBtn);
-        } else {
-            // jika load dari eksternal tapi cari berdasarkan data-page?
-            const matchingBtn = Array.from(buttons).find(btn => btn.getAttribute('data-page') === url);
-            if (matchingBtn) setActiveButton(matchingBtn);
-        }
-        
-        isTransitioning = true;
-        
-        // 1. Beri animasi fade out pada iframe (halus)
-        iframe.style.transition = 'opacity 0.22s ease-out';
-        iframe.style.opacity = '0.5';
-        
-        // 2. Setelah sedikit delay, ganti src dan fade in
         setTimeout(() => {
-            // ganti sumber iframe
-            iframe.src = url;
-            
-            // ketika iframe selesai loading (event load) maka fade in
-            const onLoadHandler = () => {
-                iframe.style.opacity = '1';
-                isTransitioning = false;
-                iframe.removeEventListener('load', onLoadHandler);
-            };
-            iframe.addEventListener('load', onLoadHandler);
-            
-            // timeout cadangan jika load terlalu lama (max 800ms)
-            setTimeout(() => {
-                if (isTransitioning === true) {
-                    iframe.style.opacity = '1';
-                    isTransitioning = false;
-                }
-            }, 800);
-        }, 70); // tiny micro delay lebih premium
-    }
-    
-    // Event listener untuk setiap tombol dengan animasi klik halus
-    buttons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const pageUrl = btn.getAttribute('data-page');
-            if (pageUrl) {
-                // menambahkan efek ripple/feedback minor (opsional)
-                btn.style.transform = 'scale(0.98)';
-                setTimeout(() => { btn.style.transform = ''; }, 120);
-                loadPage(pageUrl, btn);
-            } else {
-                console.warn('URL not defined for this button');
-            }
-        });
-    });
-    
-    // Jika home_content tidak ada defaultpage? tetap menggunakan 'home_content.html'
-    // Kita perlu pastikan bahwa halaman default saat pertama kali load sesuai dengan active home.
-    // Saat pertama kali, set active ke none tapi kita bisa set tombol pertama tidak aktif? 
-    // Biarkan tanpa active namun halaman home_content.html tampil. 
-    // Setelah itu jika ada klik, aktif. 
-    // Tapi agar lebih rapi, kita bisa memberi tanda pada tombol "Filter Scetter" tidak default, karena home tidak merepresentasikan menu? 
-    // dashboard lebih netral, jadi tidak perlu tombol aktif di awal. 
-    // Tapi user friendly, biarkan tidak ada active button pertama kali, atau kita bisa sorot "notes"? tidak perlu.
-    // Namun kita juga ingin memastikan bahwa jika pengguna memuat ulang halaman, logo dan navigasi tetap terjaga.
-    
-    // tambahan: interaksi smooth untuk hovering fallback jika terjadi error gambar
-    const logoImg = document.querySelector('.logo-wrapper img');
-    if (logoImg) {
-        logoImg.addEventListener('error', () => {
-            logoImg.src = 'https://i.ibb.co/bgCBqwDM/image.png'; // fallback tetap sama (tapi kemungkinan online)
-            logoImg.style.objectFit = 'cover';
-        });
-    }
-    
-    // animasi tambahan: efek transisi saat iframe dimuat ulang tanpa flicker kasar.
-    // ambil container background biar seamless
-    const containerIframe = document.querySelector('.iframe-container');
-    if (containerIframe) {
-        containerIframe.style.background = '#f1f5f9';
-    }
-    
-    // Bonus: preload / readyState check: jika home_content tidak ada, kita bisa catch error tapi tidak masalah asli
-    // Membuat fungsi untuk mencoba menjaga agar tidak ada error jika halaman tidak tersedia (optional)
-    window.addEventListener('load', () => {
-        // Siapkan state awal jikarame sudah fully visible
-        iframe.style.opacity = '1';
-        // set initial style untuk transisi global
-        iframe.style.transition = 'opacity 0.2s ease';
-        // mencegah iframe memuat ulang ganda
-        console.log('Dashboard Ready — Premium Experience');
-    });
-    
-    // Untuk menambah kemewahan: deteksi jika berada di halaman home_content dan tombol home tidak ada, 
-    // tetapi dashboard tetap rapih dengan background halus.
-    // Membuat agar saat klik logo (brand area) bisa reload home? boleh tambahan sentuhan
-    const brandLogoArea = document.querySelector('.brand-area');
-    if (brandLogoArea) {
-        brandLogoArea.style.cursor = 'pointer';
-        brandLogoArea.addEventListener('click', () => {
-            // reload home_content dengan transisi smooth
-            if (iframe.src && !iframe.src.includes('home_content.html')) {
-                loadPage('home_content.html', null);
-                // hilangkan active button karena home bukan menu spesifik
-                setActiveButton(null);
-            } else if (!iframe.src.includes('home_content.html')) {
-                loadPage('home_content.html', null);
-                setActiveButton(null);
-            } else {
-                // jika sudah di home, refresh dengan animasi halus (reload)
-                iframe.style.opacity = '0.5';
-                setTimeout(() => {
-                    iframe.contentWindow.location.reload();
-                    const reloadLoad = () => {
-                        iframe.style.opacity = '1';
-                        iframe.removeEventListener('load', reloadLoad);
-                    };
-                    iframe.addEventListener('load', reloadLoad);
-                    setTimeout(() => { iframe.style.opacity = '1'; }, 500);
-                }, 60);
-            }
-        });
-    }
-    
-    // Prevent iframe from showing white flash when source changes extra protection
-    const originalSrc = iframe.src;
-    // edge case for first load if there is any delay
-    if (!iframe.src || iframe.src === '') {
-        iframe.src = 'home_content.html';
+            frame.src = url;
+            frame.style.opacity = '1';
+        }, 150);
+
+        // Atur tombol aktif
+        const buttons = document.querySelectorAll('.nav-btn');
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
 </script>
 
-<!-- Demo: Konten default "home_content.html" dibuat secara dinamis untuk memastikan halaman awal tampil elegan.
-     Karena file home_content.html tidak disediakan secara fisik dalam environment ini,
-     kita buat secara built-in fallback content menggunakan srcdoc sebagai solusi premium sementara.
-     Tetapi agar dashboard langsung keren, kita menyuntikkan halaman default kustom yang sangat ciamik.
-     Tapi lebih profesional: jika file tidak ada, kita generate internal fancy home dengan desain match style.
-     Karena biasanya file terpisah, tapi agar user experience seamless, kita override dengan srcdoc kalau fetch gagal.
-     TAPI tentu kita support environment dimana file2 html pendukung (filter-scetter.html,dll) akan aktif.
-     Namun untuk tampilan HOME yang megah, kita buat iframe menampilkan konten internal yang cocok.
-     Teknik: deteksi jika home_content.html gagal load (error) maka kita isi dengan srcdoc elegan.
-     Supaya presentasi premium tak terganggu. -->
-<script>
-    (function ensureHomeContent() {
-        // Mendeteksi apakah frame dapat memuat home_content.html dengan baik (jika 404 kita fallback)
-        // tapi karena kita tidak bisa langsung menangkap error cross-origin? TETAPI kita dapat menggunakan pendekatan timeout iframe onerror
-        // Cara halus: Setelah load jika konten home_content.html ternyata error (status tidak bisa diakses) 
-        // kita gunakan deteksi "about:blank" / konten kosong? Tidak sempurna, tapi lebih baik kita fallback dengan srcdoc secara bawaan bila diperlukan
-        let homeCheckTriggered = false;
-        const checkHome = () => {
-            try {
-                // jika iframe sudah selesai loading, periksa apakah judul atau body memiliki indikasi 'home'? 
-                // alternatif: sederhana: jika dalam 1.5 detik halaman home tidak muncul (masih kosong atau error page), ganti dengan srcdoc
-                if (!homeCheckTriggered) {
-                    homeCheckTriggered = true;
-                    setTimeout(() => {
-                        // kita tidak bisa membaca isi iframe dengan pasti karena CORS jika berbeda origin, tapi karena semua是同domian jadi aman (asumsi file lokal)
-                        // tapi environment ini hanya single html, file lain belum tentu ada, oleh karena itu untuk memastikan super keren: Kita buat KONTEMPORER
-                        // Kita buat fungsi untuk menginjeksi halaman default home yang keren jika tidak mendeteksi elemen tertentu.
-                        try {
-                            const doc = iframe.contentDocument || iframe.contentWindow?.document;
-                            if (doc && doc.body) {
-                                const bodyText = doc.body.innerText || '';
-                                const hasError = bodyText.includes('404') || bodyText.includes('Not Found') || doc.title.includes('404');
-                                if (hasError || (doc.body.children.length === 0 && bodyText.trim() === '')) {
-                                    injectStylishHome();
-                                }
-                            } else {
-                                // kemungkinan akses ditolak atau frame kosong, inject srcdoc
-                                injectStylishHome();
-                            }
-                        } catch (e) {
-                            // akses ditolak (cross origin?) tapi tidak mungkin karena file seorigin, fallback aman
-                            injectStylishHome();
-                        }
-                    }, 800);
-                }
-            } catch (e) {}
-        };
-        
-        function injectStylishHome() {
-            if (iframe.src && iframe.src.includes('home_content.html') === false && iframe.src !== 'about:blank') return;
-            const elegantHome = `
-            <!DOCTYPE html>
-            <html>
-            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Home | Rizky Prayogi</title>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&display=swap" rel="stylesheet">
-            <style>
-                * { margin:0; padding:0; box-sizing:border-box; }
-                body {
-                    background: linear-gradient(145deg, #f6f9fc 0%, #eef2f9 100%);
-                    font-family: 'Inter', sans-serif;
-                    display: flex; align-items: center; justify-content: center;
-                    min-height: 100vh; padding: 2rem;
-                }
-                .glass-card {
-                    background: rgba(255,255,255,0.82);
-                    backdrop-filter: blur(12px);
-                    border-radius: 56px;
-                    padding: 2.8rem 2.5rem;
-                    max-width: 720px;
-                    width: 100%;
-                    box-shadow: 0 30px 45px -20px rgba(0,0,0,0.3), 0 0 0 1px rgba(56,189,248,0.2);
-                    transition: all 0.3s;
-                    text-align: center;
-                }
-                h1 {
-                    font-size: 2.6rem;
-                    font-weight: 700;
-                    background: linear-gradient(125deg, #0f172a, #1e293b);
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    color: transparent;
-                }
-                .badge {
-                    background: #0f172a10;
-                    border-radius: 100px;
-                    padding: 6px 16px;
-                    display: inline-block;
-                    margin-bottom: 24px;
-                    font-weight: 500;
-                    font-size: 0.8rem;
-                    color: #2c3e66;
-                    border:1px solid #38bdf840;
-                }
-                .stats-row {
-                    display: flex;
-                    gap: 24px;
-                    justify-content: center;
-                    margin: 42px 0;
-                    flex-wrap: wrap;
-                }
-                .stat-item {
-                    background: white;
-                    padding: 18px 28px;
-                    border-radius: 48px;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.02);
-                    min-width: 140px;
-                }
-                .stat-number {
-                    font-size: 2rem; font-weight: 800; color: #0284c7;
-                }
-                .stat-label { font-weight: 500; color: #334155; }
-                .greeting {
-                    font-size: 1.1rem; color: #1e293b; margin: 28px 0 18px;
-                }
-                .footer-note {
-                    margin-top: 30px;
-                    font-size: 0.8rem;
-                    color: #5b6e8c;
-                    border-top: 1px dashed #cbd5e1;
-                    padding-top: 24px;
-                }
-                i { margin-right: 8px; color: #38bdf8; }
-                @media (max-width:550px) { .glass-card { padding: 1.5rem; } h1 { font-size: 1.9rem; } }
-            </style>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-            </head>
-            <body>
-            <div class="glass-card">
-                <div class="badge"><i class="fas fa-chart-line"></i> DASHBOARD ACTIVE • NEXUS CORE</div>
-                <h1>⚡ Welcome back, <span style="background:linear-gradient(135deg,#0284c7,#38bdf8);background-clip:text;-webkit-background-clip:text;color:transparent;">Rizky Prayogi</span></h1>
-                <p class="greeting"><i class="fas fa-crown"></i> Command Center untuk Filter Scetter, Pembukuan & Notes CS Line</p>
-                <div class="stats-row">
-                    <div class="stat-item"><div class="stat-number">3</div><div class="stat-label">Active Modules</div></div>
-                    <div class="stat-item"><div class="stat-number">⏱️</div><div class="stat-label">Real-time Sync</div></div>
-                </div>
-                <div style="margin: 16px 0;"><i class="fas fa-magic"></i> Pilih menu di sidebar untuk mengelola data dengan presisi tinggi</div>
-                <div class="footer-note"><i class="fas fa-shield-alt"></i> Sistem terintegrasi • performa kilat • animasi mulus</div>
-            </div>
-            </body>
-            </html>
-            `;
-            if (iframe && !iframe.src.includes('home_content.html')) return;
-            iframe.srcdoc = elegantHome;
-            iframe.style.opacity = '1';
-            isTransitioning = false;
-        }
-        
-        iframe.addEventListener('load', () => {
-            if (iframe.src && iframe.src.includes('home_content.html')) {
-                // cek sedikit apakah ada error loading home_content
-                setTimeout(() => {
-                    try {
-                        const doc = iframe.contentDocument;
-                        if (doc && (doc.body.innerText.includes('404') || doc.body.children.length === 0)) {
-                            injectStylishHome();
-                        }
-                    } catch (error) {}
-                }, 200);
-            } else if (iframe.src === window.location.href || iframe.src === '') {
-                // fallback
-                if (!iframe.src || iframe.src === 'about:blank') injectStylishHome();
-            }
-        });
-        // safety timer utama
-        setTimeout(() => {
-            if (iframe.src && (iframe.src.includes('blank') || iframe.src === '' || (iframe.contentDocument && iframe.contentDocument.body.innerText.trim() === ''))) {
-                injectStylishHome();
-            } else if (!iframe.src || iframe.src === 'about:blank') injectStylishHome();
-        }, 500);
-    })();
-</script>
 </body>
 </html>
