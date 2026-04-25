@@ -3,152 +3,937 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Nexus Dashboard | Rizky Prayogi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <title>DasbordCS - KY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
+        :root {
+            --bg-deep: #06080f;
+            --bg-card: rgba(12, 18, 35, 0.85);
+            --accent: #00f0ff;
+            --accent2: #a855f7;
+            --accent3: #f43f5e;
+            --text: #e8ecf4;
+            --text-muted: #5a6480;
+            --border: rgba(0, 240, 255, 0.12);
+            --glow: rgba(0, 240, 255, 0.35);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03050b);
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-deep);
             height: 100vh;
             display: flex;
             overflow: hidden;
-            color: #f1f5f9;
+            color: var(--text);
         }
 
+        /* === PARTIKEL CANVAS === */
+        #particleCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* === AMBIENT GLOW === */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+            z-index: 0;
+            animation: orbFloat 12s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: rgba(0, 240, 255, 0.06);
+            top: -100px; left: -100px;
+        }
+        .orb-2 {
+            width: 350px; height: 350px;
+            background: rgba(168, 85, 247, 0.05);
+            bottom: -80px; right: 10%;
+            animation-delay: -4s;
+            animation-duration: 15s;
+        }
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: rgba(244, 63, 94, 0.04);
+            top: 50%; left: 40%;
+            animation-delay: -8s;
+            animation-duration: 18s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -20px) scale(1.1); }
+            100% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        /* === SIDEBAR === */
         .sidebar {
-            width: 280px;
-            background: rgba(18, 25, 45, 0.75);
-            backdrop-filter: blur(12px);
-            border-right: 1px solid rgba(56, 189, 248, 0.25);
-            padding: 25px 15px;
+            position: relative;
+            z-index: 10;
+            width: 290px;
+            min-width: 290px;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border-right: 1px solid var(--border);
+            padding: 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.3);
+            animation: slideInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+            overflow: hidden;
         }
 
+        /* Garis neon atas sidebar */
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), var(--accent3), transparent);
+            animation: neonLine 4s linear infinite;
+            background-size: 200% 100%;
+        }
+
+        @keyframes neonLine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* === BRAND === */
         .brand-area {
+            padding: 28px 22px 22px;
+            position: relative;
+        }
+
+        .brand-area::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 22px; right: 22px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), rgba(168,85,247,0.15), transparent);
+        }
+
+        .brand-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+            gap: 14px;
         }
 
         .logo-wrapper {
-            width: 45px;
-            height: 45px;
-            background: #0f172a;
-            border-radius: 10px;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            overflow: hidden;
+            width: 50px; height: 50px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(168,85,247,0.15));
+            border: 1px solid rgba(0,240,255,0.3);
+            padding: 4px;
+            position: relative;
+            animation: logoPulse 3s ease-in-out infinite;
+            flex-shrink: 0;
         }
 
-        .logo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .logo-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 17px;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, var(--accent), var(--accent2)) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            animation: borderRotate 6s linear infinite;
+        }
 
-        .brand-text h2 {
-            font-size: 1rem;
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(0,240,255,0.1); }
+            50% { box-shadow: 0 0 25px rgba(0,240,255,0.25); }
+        }
+
+        @keyframes borderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .logo-wrapper img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .brand-text h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #FFFFFF, #38bdf8);
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent) 50%, var(--accent2) 100%);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: gradShift 5s ease infinite;
+            line-height: 1.3;
         }
 
-        /* NAVIGATION */
-        .nav-container { flex: 1; overflow-y: auto; }
+        @keyframes gradShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .brand-text .subtitle {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            margin-top: 2px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: blink 2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e; }
+            50% { opacity: 0.3; box-shadow: none; }
+        }
+
+        /* === NAVIGASI === */
+        .nav-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-container::-webkit-scrollbar { width: 3px; }
+        .nav-container::-webkit-scrollbar-track { background: transparent; }
+        .nav-container::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.2); border-radius: 10px; }
+
+        .nav-label {
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 12px 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         .nav-btn {
             width: 100%;
-            padding: 12px 15px;
-            margin: 5px 0;
-            background: rgba(30, 41, 59, 0.4);
+            padding: 13px 16px;
+            background: transparent;
             border: 1px solid transparent;
-            color: #e2e8f0;
-            border-radius: 10px;
+            color: #8892a8;
+            border-radius: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            font-size: 0.88rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn .icon-wrap {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.35s ease;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        /* Efek ripple */
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(0,240,255,0.12), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .nav-btn:hover::before { opacity: 1; }
+
+        .nav-btn:hover {
+            color: #c8d0e0;
+            background: rgba(0,240,255,0.04);
+            border-color: rgba(0,240,255,0.08);
+            transform: translateX(4px);
+        }
+
+        .nav-btn:hover .icon-wrap {
+            background: rgba(0,240,255,0.1);
+            border-color: rgba(0,240,255,0.2);
+            color: var(--accent);
+        }
+
+        .nav-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(0,240,255,0.12), rgba(168,85,247,0.08));
+            border-color: rgba(0,240,255,0.3);
+            box-shadow: 0 0 20px rgba(0,240,255,0.08), inset 0 0 20px rgba(0,240,255,0.03);
+        }
+
+        .nav-btn.active .icon-wrap {
+            background: linear-gradient(135deg, rgba(0,240,255,0.25), rgba(168,85,247,0.15));
+            border-color: rgba(0,240,255,0.4);
+            color: var(--accent);
+            box-shadow: 0 0 12px rgba(0,240,255,0.15);
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 20%; bottom: 20%;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--accent2));
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Stagger masuk */
+        .nav-btn:nth-child(2) { animation: fadeSlideUp 0.5s 0.15s both; }
+        .nav-btn:nth-child(3) { animation: fadeSlideUp 0.5s 0.25s both; }
+        .nav-btn:nth-child(4) { animation: fadeSlideUp 0.5s 0.35s both; }
+        .nav-btn:nth-child(5) { animation: fadeSlideUp 0.5s 0.45s both; }
+
+        @keyframes fadeSlideUp {
+            from { transform: translateY(16px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === FOOTER SIDEBAR === */
+        .footer-sidebar {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+        }
+
+        .footer-sidebar p {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+        }
+
+        .footer-sidebar .heart {
+            color: var(--accent3);
+            display: inline-block;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.25); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+        }
+
+        /* === CONTENT AREA === */
+        .content-area {
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            margin: 15px 15px 15px 0;
+            border-radius: 22px;
+            overflow: hidden;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            animation: contentReveal 0.8s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes contentReveal {
+            from { transform: scale(0.96) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* Garis neon bawah content */
+        .content-area::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.3), rgba(168,85,247,0.3), transparent);
+        }
+
+        /* Topbar mini */
+        .content-topbar {
+            height: 52px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+            flex-shrink: 0;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .content-topbar .page-title {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .content-topbar .page-title .dot {
+            width: 5px; height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-btn {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
             transition: all 0.3s ease;
+        }
+
+        .topbar-btn:hover {
+            background: rgba(0,240,255,0.1);
+            border-color: rgba(0,240,255,0.2);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .topbar-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .iframe-wrap {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .iframe-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #0a0e1a;
+        }
+
+        /* Loading overlay iframe */
+        .iframe-loading {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-deep);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 5;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .iframe-loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-ring {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(0,240,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .iframe-loading p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* === SCANLINE EFFECT (subtle) === */
+        .scanline {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 999;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.015) 2px,
+                rgba(0,0,0,0.015) 4px
+            );
+        }
+
+        /* === CORNER DECORATIONS === */
+        .corner-deco {
+            position: fixed;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .corner-deco.tl { top: 10px; left: 300px; }
+        .corner-deco.br { bottom: 10px; right: 20px; }
+
+        .corner-deco svg {
+            width: 30px; height: 30px;
+            opacity: 0.15;
+        }
+
+        /* === MOBILE HAMBURGER === */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 12px; left: 12px;
+            z-index: 100;
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-size: 1.1rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            background: rgba(0,240,255,0.1);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9;
+            backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-toggle { display: flex; }
+            .sidebar {
+                position: fixed;
+                left: -300px;
+                top: 0; bottom: 0;
+                z-index: 50;
+                transition: left 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+            .sidebar.open { left: 0; }
+            .sidebar-overlay.open { display: block; }
+            .content-area { margin: 15px; margin-top: 60px; }
+        }
+
+        /* === NOTIF TOAST === */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .toast.out { animation: toastOut 0.3s ease both; }
+
+        .toast .toast-icon {
+            color: var(--accent);
             font-size: 0.9rem;
         }
 
-        .nav-btn:hover, .nav-btn.active {
-            background: rgba(56, 189, 248, 0.15);
-            border-color: rgba(56, 189, 248, 0.5);
-            color: #38bdf8;
+        @keyframes toastIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-
-        .content {
-            flex: 1;
-            margin: 15px;
-            background: #fff;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        iframe { width: 100%; height: 100%; border: none; }
-        
-        .footer-sidebar {
-            margin-top: auto;
-            text-align: center;
-            font-size: 0.65rem;
-            opacity: 0.4;
-            padding-top: 15px;
+        @keyframes toastOut {
+            to { transform: translateX(100px); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="brand-area">
-        <div class="logo-wrapper">
-            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="Logo">
+    <!-- Ambient orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+
+    <!-- Partikel -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Scanline -->
+    <div class="scanline"></div>
+
+    <!-- Corner decos -->
+    <div class="corner-deco tl">
+        <svg viewBox="0 0 30 30" fill="none"><path d="M0 30V10L10 0" stroke="#00f0ff" stroke-width="1"/><path d="M0 20L10 10" stroke="#a855f7" stroke-width="0.5" opacity="0.5"/></svg>
+    </div>
+    <div class="corner-deco br">
+        <svg viewBox="0 0 30 30" fill="none"><path d="M30 0v20L20 30" stroke="#00f0ff" stroke-width="1"/><path d="M30 10L20 20" stroke="#a855f7" stroke-width="0.5" opacity="0.5"/></svg>
+    </div>
+
+    <!-- Mobile toggle -->
+    <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- === SIDEBAR === -->
+    <aside class="sidebar" id="sidebar">
+        <div class="brand-area">
+            <div class="brand-row">
+                <div class="logo-wrapper">
+                    <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="Logo">
+                </div>
+                <div class="brand-text">
+                    <h1>DasbordCS - KY</h1>
+                    <p class="subtitle"><span class="status-dot"></span>System Online</p>
+                </div>
+            </div>
         </div>
-        <div class="brand-text">
-            <h2>RIZKY PRAYOGI</h2>
-            <p style="font-size: 0.55rem; color: #38bdf8;">DASHBOARD ADMIN</p>
+
+        <nav class="nav-container">
+            <div class="nav-label">Menu Utama</div>
+
+            <button class="nav-btn active" onclick="loadPage('filter-scetter.html', this, 'Filter Scetter')">
+                <div class="icon-wrap"><i class="fas fa-filter"></i></div>
+                <span>Filter Scetter</span>
+            </button>
+
+            <button class="nav-btn" onclick="loadPage('promo-event.html', this, 'Promo Event')">
+                <div class="icon-wrap"><i class="fas fa-gift"></i></div>
+                <span>Promo Event</span>
+            </button>
+
+            <button class="nav-btn" onclick="loadPage('lottery-predict.html', this, 'Lottery Predict')">
+                <div class="icon-wrap"><i class="fas fa-dice"></i></div>
+                <span>Lottery Predict</span>
+            </button>
+
+            <button class="nav-btn" onclick="loadPage('pembukuan.html', this, 'Pembukuan')">
+                <div class="icon-wrap"><i class="fas fa-wallet"></i></div>
+                <span>Pembukuan</span>
+            </button>
+
+            <div class="nav-label" style="margin-top: 12px;">Lainnya</div>
+
+            <button class="nav-btn" onclick="showToast('Fitur segera hadir', 'fa-clock')">
+                <div class="icon-wrap"><i class="fas fa-chart-line"></i></div>
+                <span>Analytics</span>
+            </button>
+
+            <button class="nav-btn" onclick="showToast('Fitur segera hadir', 'fa-clock')">
+                <div class="icon-wrap"><i class="fas fa-cog"></i></div>
+                <span>Pengaturan</span>
+            </button>
+        </nav>
+
+        <div class="footer-sidebar">
+            <p>&copy; 2026 DasbordCS <span class="heart"><i class="fas fa-heart"></i></span> KY</p>
         </div>
-    </div>
-    
-    <div class="nav-container">
-        <button class="nav-btn active" onclick="loadPage('filter-scetter.html', this)">
-            <i class="fas fa-filter"></i> <span>Filter Scetter</span>
-        </button>
+    </aside>
 
-        <button class="nav-btn" onclick="loadPage('promo-event.html', this)">
-            <i class="fas fa-gift"></i> <span>Promo Event</span>
-        </button>
+    <!-- === CONTENT === -->
+    <main class="content-area">
+        <div class="content-topbar">
+            <div class="page-title">
+                <span class="dot"></span>
+                <span id="pageTitle">Filter Scetter</span>
+            </div>
+            <div class="topbar-actions">
+                <div class="topbar-time" id="liveTime">00:00:00</div>
+                <button class="topbar-btn" onclick="refreshFrame()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                <button class="topbar-btn" onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+        <div class="iframe-wrap">
+            <div class="iframe-loading" id="iframeLoading">
+                <div class="loader-ring"></div>
+                <p>Loading module...</p>
+            </div>
+            <iframe id="mainFrame" src="filter-scetter.html" onload="hideLoading()"></iframe>
+        </div>
+    </main>
 
-        <button class="nav-btn" onclick="loadPage('lottery-predict.html', this)">
-            <i class="fas fa-dice"></i> <span>Lottery Predict</span>
-        </button>
+    <script>
+        // === PARTICLE SYSTEM ===
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: -1000, y: -1000 };
 
-        <button class="nav-btn" onclick="loadPage('pembukuan.html', this)">
-            <i class="fas fa-wallet"></i> <span>Pembukuan</span>
-        </button>
-    </div>
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-    <div class="footer-sidebar">
-        <p>© 2026 RPM • POIPET</p>
-    </div>
-</div>
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
 
-<div class="content">
-    <iframe id="mainFrame" src="filter-scetter.html"></iframe>
-</div>
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.hue = Math.random() > 0.5 ? 185 : 270; // cyan atau ungu
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
 
-<script>
-    function loadPage(url, btn) {
-        document.getElementById('mainFrame').src = url;
-        const buttons = document.querySelectorAll('.nav-btn');
-        buttons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-</script>
+                // Interaksi mouse
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 120) {
+                    const force = (120 - dist) / 120;
+                    this.x -= dx * force * 0.02;
+                    this.y -= dy * force * 0.02;
+                    this.opacity = Math.min(0.8, this.opacity + 0.02);
+                } else {
+                    this.opacity += (0.2 - this.opacity) * 0.01;
+                }
 
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        // Buat partikel
+        const particleCount = Math.min(80, Math.floor(window.innerWidth * window.innerHeight / 15000));
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // Gambar garis koneksi
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        const alpha = (1 - dist / 100) * 0.08;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 240, 255, ${alpha})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            drawConnections();
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // === NAVIGASI ===
+        function loadPage(url, btn, name) {
+            const frame = document.getElementById('mainFrame');
+            const loading = document.getElementById('iframeLoading');
+
+            // Tampilkan loading
+            loading.classList.remove('hidden');
+
+            // Ganti src
+            frame.src = url;
+
+            // Update active state
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update judul halaman
+            if (name) {
+                document.getElementById('pageTitle').textContent = name;
+            }
+
+            // Toast notifikasi
+            showToast(`Membuka ${name || 'halaman'}`, 'fa-check-circle');
+
+            // Tutup sidebar mobile
+            closeMobileSidebar();
+        }
+
+        function hideLoading() {
+            setTimeout(() => {
+                document.getElementById('iframeLoading').classList.add('hidden');
+            }, 400);
+        }
+
+        // === JAM LIVE ===
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveTime').textContent = `${h}:${m}:${s}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // === TOAST ===
+        function showToast(message, icon = 'fa-info-circle') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('out');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // === REFRESH ===
+        function refreshFrame() {
+            const frame = document.getElementById('mainFrame');
+            const loading = document.getElementById('iframeLoading');
+            loading.classList.remove('hidden');
+            frame.src = frame.src;
+            showToast('Memuat ulang halaman', 'fa-sync-alt');
+        }
+
+        // === FULLSCREEN ===
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+                showToast('Mode fullscreen', 'fa-expand');
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // === MOBILE SIDEBAR ===
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        mobileToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('open');
+        });
+
+        sidebarOverlay.addEventListener('click', closeMobileSidebar);
+
+        function closeMobileSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+        }
+
+        // === MOUSE TRACKING UNTUK RIPPLE NAV ===
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                btn.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+                btn.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+            });
+        });
+
+        // === WELCOME TOAST ===
+        setTimeout(() => {
+            showToast('Selamat datang di DasbordCS - KY', 'fa-hand-sparkles');
+        }, 1200);
+    </script>
 </body>
 </html>
