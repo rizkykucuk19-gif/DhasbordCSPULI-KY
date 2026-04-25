@@ -18,135 +18,122 @@
             color: #f1f5f9;
         }
 
-        /* SIDEBAR GLASSMORPHIC */
         .sidebar {
             width: 280px;
             background: rgba(18, 25, 45, 0.75);
             backdrop-filter: blur(12px);
             border-right: 1px solid rgba(56, 189, 248, 0.25);
-            padding: 28px 20px;
+            padding: 25px 15px;
             display: flex;
             flex-direction: column;
             box-shadow: 8px 0 32px rgba(0, 0, 0, 0.3);
-            z-index: 10;
         }
 
         .brand-area {
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 40px;
+            gap: 12px;
+            margin-bottom: 30px;
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-            cursor: pointer;
         }
 
         .logo-wrapper {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background: #0f172a;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 10px;
             border: 1px solid rgba(56, 189, 248, 0.4);
             overflow: hidden;
         }
 
-        .logo-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .logo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
 
         .brand-text h2 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             background: linear-gradient(135deg, #FFFFFF, #38bdf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* NAVIGATION BUTTONS */
-        .nav-container { flex: 1; }
+        /* NAVIGATION */
+        .nav-container { flex: 1; overflow-y: auto; }
         .nav-btn {
             width: 100%;
-            padding: 14px 18px;
-            margin: 8px 0;
+            padding: 12px 15px;
+            margin: 5px 0;
             background: rgba(30, 41, 59, 0.4);
             border: 1px solid transparent;
             color: #e2e8f0;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             transition: all 0.3s ease;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .nav-btn:hover, .nav-btn.active {
             background: rgba(56, 189, 248, 0.15);
             border-color: rgba(56, 189, 248, 0.5);
             color: #38bdf8;
-            transform: translateX(5px);
         }
 
-        /* CONTENT AREA */
         .content {
             flex: 1;
             margin: 15px;
             background: #fff;
-            border-radius: 24px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            transition: opacity 0.3s;
-        }
-
+        iframe { width: 100%; height: 100%; border: none; }
+        
         .footer-sidebar {
             margin-top: auto;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             opacity: 0.4;
-            padding-top: 20px;
+            padding-top: 15px;
         }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="brand-area" onclick="location.reload()">
+    <div class="brand-area">
         <div class="logo-wrapper">
-            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="IKY Logo">
+            <img src="https://i.ibb.co/bgCBqwDM/image.png" alt="Logo">
         </div>
         <div class="brand-text">
             <h2>RIZKY PRAYOGI</h2>
-            <p style="font-size: 0.6rem; color: #38bdf8;">✦ NEXUS CORE ✦</p>
+            <p style="font-size: 0.55rem; color: #38bdf8;">DASHBOARD ADMIN</p>
         </div>
     </div>
     
     <div class="nav-container">
         <button class="nav-btn active" onclick="loadPage('filter-scetter.html', this)">
-            <i class="fas fa-filter"></i> <span>Filter Scetter KY</span>
+            <i class="fas fa-filter"></i> <span>Filter Scetter</span>
         </button>
-        
+
+        <button class="nav-btn" onclick="loadPage('promo-event.html', this)">
+            <i class="fas fa-gift"></i> <span>Promo Event</span>
+        </button>
+
+        <button class="nav-btn" onclick="loadPage('lottery-predict.html', this)">
+            <i class="fas fa-dice"></i> <span>Lottery Predict</span>
+        </button>
+
         <button class="nav-btn" onclick="loadPage('pembukuan.html', this)">
-            <i class="fas fa-wallet"></i> <span>Pembukuan Duit</span>
-        </button>
-        
-        <button class="nav-btn" onclick="loadPage('notes_cs.html', this)">
-            <i class="fas fa-sticky-note"></i> <span>Notes CS Line</span>
+            <i class="fas fa-wallet"></i> <span>Pembukuan</span>
         </button>
     </div>
 
     <div class="footer-sidebar">
-        <p>© 2026 RIZKY PRAYOGI • POIPET</p>
+        <p>© 2026 RPM • POIPET</p>
     </div>
 </div>
 
@@ -156,22 +143,11 @@
 
 <script>
     function loadPage(url, btn) {
-        const frame = document.getElementById('mainFrame');
-        frame.style.opacity = '0'; // Efek transisi halus
-        
-        setTimeout(() => {
-            frame.src = url;
-            frame.style.opacity = '1';
-        }, 200);
-
-        // Update tombol aktif
+        document.getElementById('mainFrame').src = url;
         const buttons = document.querySelectorAll('.nav-btn');
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
     }
-
-    // Mencegah klik kanan untuk keamanan (opsional)
-    document.addEventListener('contextmenu', event => event.preventDefault());
 </script>
 
 </body>
